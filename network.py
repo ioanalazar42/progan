@@ -1,4 +1,6 @@
-'''Defines the architectures of the WGAN Critic and Generator.'''
+'''Defines the architectures of the ProGAN Critics and Generators. There are multiple architectures corresponding to 
+    the different image sizes that are dealt with, i.e. 4x4, 8x8, 16x16, ...
+    New, untrained layers are added gradually to an already trained network so the trained parameters are not affected.'''
 
 import torch
 import torch.nn as nn
