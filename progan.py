@@ -55,7 +55,10 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 total_training_steps = 0
 
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
-fixed_latent_space_vectors = torch.randn(64, 512, device=device)  # Note: randn is sampling from a normal distribution
+# Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
+random_state = np.random.Generator(np.random.PCG64(np.random.SeedSequence(44442222)))
+random_values = random_state.standard_normal([64, 512, 1, 1], dtype=np.float32)
+fixed_latent_space_vectors = torch.tensor(random_values, device=device)
 
 # Set up TensorBoard.
 writer = SummaryWriter(args.tensorboard_dir)
