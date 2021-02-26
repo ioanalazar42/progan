@@ -14,8 +14,8 @@ from timeit import default_timer as timer
 from torch.utils.tensorboard import SummaryWriter
 from utils import sample_gradient_l2_norm
 
-EXPERIMENT_ID = int(time.time()) # used to create new directories to save results of individual experiments
-# directories to save resulst of experiments
+EXPERIMENT_ID = int(time.time()) # Used to create new directories to save results of individual experiments
+# Directories to save results of experiments.
 DEFAULT_IMG_DIR = 'images/{}'.format(EXPERIMENT_ID)
 DEFAULT_TENSORBOARD_DIR = 'tensorboard/{}'.format(EXPERIMENT_ID)
 DEFAULT_MODEL_DIR = 'models/{}'.format(EXPERIMENT_ID)
@@ -30,20 +30,20 @@ PARSER.add_argument('--save_image_dir', default=DEFAULT_IMG_DIR)
 PARSER.add_argument('--save_model_dir', default=DEFAULT_MODEL_DIR)
 PARSER.add_argument('--tensorboard_dir', default=DEFAULT_TENSORBOARD_DIR)
 PARSER.add_argument('--dry_run', default=False, type=bool)
-PARSER.add_argument('--model_save_frequency', default=15, type=int)
+PARSER.add_argument('--model_save_frequency', default=4, type=int)
 
 PARSER.add_argument('--training_set_size', default=99999999, type=int)
-PARSER.add_argument('--epoch_length', default=1, type=int)
+PARSER.add_argument('--epoch_length', default=2500, type=int)
 PARSER.add_argument('--gradient_penalty_factor', default=10, type=float)
 PARSER.add_argument('--learning_rate', default=0.0001, type=float)
 PARSER.add_argument('--mini_batch_size', default=2, type=int)
-PARSER.add_argument('--num_critic_training_steps', default=5, type=int)
-PARSER.add_argument('--num_epochs', default=4, type=int)
-PARSER.add_argument('--transition_length', default=2, type=int)
+PARSER.add_argument('--num_critic_training_steps', default=2, type=int)
+PARSER.add_argument('--num_epochs', default=20, type=int)
+PARSER.add_argument('--transition_length', default=25000, type=int)
 
 args = PARSER.parse_args()
 
-# create directories for images, tensorboard results and saved models
+# Create directories for images, tensorboard results and saved models.
 if not args.dry_run:
     os.makedirs(args.save_image_dir)
     os.makedirs(args.tensorboard_dir)
@@ -51,7 +51,8 @@ if not args.dry_run:
 else:
     print('Dry run! Just for testing, data is not saved')
 
-device = torch.device('cpu' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+total_training_steps = 0
 
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 fixed_latent_space_vectors = torch.randn(64, 512, device=device)  # Note: randn is sampling from a normal distribution
@@ -134,6 +135,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             average_generator_loss += loss.item() / args.epoch_length
      
         # Record statistics.
+        total_training_steps += 1
         time_elapsed = timer() - start_time
 
         print(('Network size: {} - Epoch: {} - Critic Loss: {:.6f} - Generator Loss: {:.6f} - Average C(x): {:.6f} - Average C(G(x)): {:.6f} - Time: {:.3f}s')
@@ -157,7 +159,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 generated_images = generator_model(fixed_latent_space_vectors).detach()
             generated_images = F.interpolate(generated_images, scale_factor= 128 / network_size, mode='nearest')
             grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
-            torchvision.utils.save_image(generated_images, '{}/{}-{}x{}.jpg'.format(args.save_image_dir, epoch, network_size, network_size), padding=2, normalize=True)
+            torchvision.utils.save_image(generated_images, '{}/{:03d}-{}x{}-{}.jpg'.format(args.save_image_dir, total_training_steps, network_size, network_size, epoch), padding=2, normalize=True)
 
             writer.add_image('training/generated-images', grid_images, epoch)
         writer.add_scalar('training/generator/loss', average_generator_loss, epoch)
