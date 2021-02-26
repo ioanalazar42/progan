@@ -19,9 +19,9 @@ from utils import sample_gradient_l2_norm
 EXPERIMENT_ID = int(time.time()) # Used to create new directories to save results of individual experiments
 
 # Directories to save results of experiments.
-DEFAULT_IMG_DIR = 'images/{}'.format(EXPERIMENT_ID)
-DEFAULT_TENSORBOARD_DIR = 'tensorboard/{}'.format(EXPERIMENT_ID)
-DEFAULT_MODEL_DIR = 'models/{}'.format(EXPERIMENT_ID)
+DEFAULT_IMG_DIR = f'images/{EXPERIMENT_ID}'
+DEFAULT_TENSORBOARD_DIR = f'tensorboard/{EXPERIMENT_ID}'
+DEFAULT_MODEL_DIR = f'models/{EXPERIMENT_ID}'
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -144,19 +144,25 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         total_training_steps += 1
         time_elapsed = timer() - start_time
 
-        print(('Network size: {} - Epoch: {} - Critic Loss: {:.6f} - Generator Loss: {:.6f} - Average C(x): {:.6f} - Average C(G(x)): {:.6f} - Time: {:.3f}s')
-            .format(network_size, epoch, average_critic_loss , average_generator_loss, average_critic_real_performance, average_critic_generated_performance, time_elapsed))
-        
+        # Print some statistics in the terminal.
+        print(f'Network size: {network_size} - Epoch: {epoch} - '
+            f'Critic Loss: {average_critic_loss:.6f} - '
+            f'Generator Loss: {average_generator_loss:.6f} - '
+            f'Average C(x): {average_critic_real_performance:.6f} - '
+            f'Average C(G(x)): {average_critic_generated_performance:.6f} - '
+            f'Time: {time_elapsed:.3f}s')
+
         # Save the model parameters at a specified interval.
         if (not args.dry_run 
             and epoch > 0 
             and (epoch % args.model_save_frequency == 0 or epoch == args.num_epochs - 1)):
-            save_critic_model_path = '{}/critic_{}-{}x{}-{}.pth'.format(args.save_model_dir, network_size, network_size, EXPERIMENT_ID, epoch)
-            print('\nSaving critic model as "{}"...'.format(save_critic_model_path))
+            
+            save_critic_model_path = f'{args.save_model_dir}/critic-{network_size}x{network_size}-{epoch}.pth'
+            print(f'\nSaving critic model as "{save_critic_model_path}"...')
             torch.save(critic_model.state_dict(), save_critic_model_path)
             
-            save_generator_model_path = '{}/generator_{}-{}x{}-{}.pth'.format(args.save_model_dir, network_size, network_size, EXPERIMENT_ID, epoch)
-            print('Saving generator model as "{}"...\n'.format(save_generator_model_path,))
+            save_generator_model_path = f'{args.save_model_dir}/generator-{network_size}x{network_size}-{epoch}.pth'
+            print(f'Saving generator model as "{save_generator_model_path}"...\n')
             torch.save(generator_model.state_dict(), save_generator_model_path)
 
         # Save images.
@@ -165,9 +171,10 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 generated_images = generator_model(fixed_latent_space_vectors).detach()
             generated_images = F.interpolate(generated_images, scale_factor= 128 / network_size, mode='nearest')
             grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
-            torchvision.utils.save_image(generated_images, '{}/{:03d}-{}x{}-{}.jpg'.format(args.save_image_dir, total_training_steps, network_size, network_size, epoch), padding=2, normalize=True)
+            torchvision.utils.save_image(generated_images, f'{args.save_model_dir}/{total_training_steps}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
 
             writer.add_image('training/generated-images', grid_images, epoch)
+        
         writer.add_scalar('training/generator/loss', average_generator_loss, epoch)
         writer.add_scalar('training/critic/loss', average_critic_loss, epoch)
         writer.add_scalar('training/critic/real-performance', average_critic_real_performance, epoch)
