@@ -14,12 +14,16 @@ from timeit import default_timer as timer
 from torch.utils.tensorboard import SummaryWriter
 from utils import sample_gradient_l2_norm
 
+
+# Define some constants.
 EXPERIMENT_ID = int(time.time()) # Used to create new directories to save results of individual experiments
+
 # Directories to save results of experiments.
 DEFAULT_IMG_DIR = 'images/{}'.format(EXPERIMENT_ID)
 DEFAULT_TENSORBOARD_DIR = 'tensorboard/{}'.format(EXPERIMENT_ID)
 DEFAULT_MODEL_DIR = 'models/{}'.format(EXPERIMENT_ID)
 
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 PARSER = argparse.ArgumentParser()
 
@@ -51,14 +55,13 @@ if not args.dry_run:
 else:
     print('Dry run! Just for testing, data is not saved')
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 total_training_steps = 0
 
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 # Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
 random_state = np.random.Generator(np.random.PCG64(np.random.SeedSequence(44442222)))
 random_values = random_state.standard_normal([64, 512, 1, 1], dtype=np.float32)
-fixed_latent_space_vectors = torch.tensor(random_values, device=device)
+fixed_latent_space_vectors = torch.tensor(random_values, device=DEVICE)
 
 # Set up TensorBoard.
 writer = SummaryWriter(args.tensorboard_dir)
@@ -71,8 +74,8 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     images = load_images(args.data_dir, args.training_set_size, network_size)
 
     if network_size == 4:
-        critic_model = Critic4x4().to(device)
-        generator_model = Generator4x4().to(device)
+        critic_model = Critic4x4().to(DEVICE)
+        generator_model = Generator4x4().to(DEVICE)
     else:
         critic_model = critic_model.evolve()
         generator_model = generator_model.evolve()
@@ -103,17 +106,17 @@ for network_size in [4, 8, 16, 32, 64, 128]:
 
                 # Evaluate a mini-batch of real images.
                 random_indexes = np.random.choice(len(images), args.mini_batch_size)
-                real_images = torch.tensor(images[random_indexes], device=device)
+                real_images = torch.tensor(images[random_indexes], device=DEVICE)
 
                 real_scores = critic_model(real_images)
 
                 # Evaluate a mini-batch of generated images.
-                random_latent_space_vectors = torch.randn(args.mini_batch_size, 512, device=device)
+                random_latent_space_vectors = torch.randn(args.mini_batch_size, 512, device=DEVICE)
                 generated_images = generator_model(random_latent_space_vectors)
 
                 generated_scores = critic_model(generated_images.detach()) # TODO: Why exactly is `.detach` required?
 
-                gradient_l2_norm = sample_gradient_l2_norm(critic_model, real_images, generated_images, device)
+                gradient_l2_norm = sample_gradient_l2_norm(critic_model, real_images, generated_images, DEVICE)
                 
                 # Update the weights.
                 loss = torch.mean(generated_scores) - torch.mean(real_scores) + args.gradient_penalty_factor * gradient_l2_norm  # The critic's goal is for `generated_scores` to be small and `real_scores` to be big. I don't know why we had to overcomplicate things and call this "Wasserstein".
