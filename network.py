@@ -128,8 +128,8 @@ class Critic64x64(nn.Module):
 
         return x
 
-    def evolve(self):
-        critic128x128_model = Critic128x128()
+    def evolve(self, device):
+        critic128x128_model = Critic128x128().to(device)
 
         critic128x128_model.conv3_layernorm = self.conv3_layernorm
         critic128x128_model.conv3 = self.conv3
@@ -196,8 +196,8 @@ class Critic32x32(nn.Module):
 
         return x
 
-    def evolve(self):
-        critic64x64_model = Critic64x64()
+    def evolve(self, device):
+        critic64x64_model = Critic64x64().to(device)
 
         critic64x64_model.conv4_layernorm = self.conv4_layernorm
         critic64x64_model.conv4 = self.conv4
@@ -256,8 +256,8 @@ class Critic16x16(nn.Module):
 
         return x
 
-    def evolve(self):
-        critic32x32_model = Critic32x32()
+    def evolve(self, device):
+        critic32x32_model = Critic32x32().to(device)
 
         critic32x32_model.conv5_layernorm = self.conv5_layernorm
         critic32x32_model.conv5 = self.conv5
@@ -308,8 +308,8 @@ class Critic8x8(nn.Module):
 
         return x
 
-    def evolve(self):
-        critic16x16_model = Critic16x16()
+    def evolve(self, device):
+        critic16x16_model = Critic16x16().to(device)
 
         critic16x16_model.conv5_layernorm = self.conv5_layernorm
         critic16x16_model.conv5 = self.conv5
@@ -338,8 +338,8 @@ class Critic4x4(nn.Module):
 
         return x
 
-    def evolve(self):
-        critic8x8_model = Critic8x8()
+    def evolve(self, device):
+        critic8x8_model = Critic8x8().to(device)
 
         critic8x8_model.fc_layernorm = self.fc_layernorm
         critic8x8_model.fc = self.fc
@@ -362,8 +362,8 @@ class Generator4x4(nn.Module):
         x = self.rgb_conv(x)
         return x
 
-    def evolve(self):
-        generator8x8_model = Generator8x8()
+    def evolve(self, device):
+        generator8x8_model = Generator8x8().to(device)
 
         generator8x8_model.fc = self.fc
 
@@ -410,8 +410,8 @@ class Generator8x8(nn.Module):
 
         return x
 
-    def evolve(self):
-        generator16x16_model = Generator16x16()
+    def evolve(self, device):
+        generator16x16_model = Generator16x16().to(device)
 
         generator16x16_model.fc = self.fc
 
@@ -466,8 +466,8 @@ class Generator16x16(nn.Module):
 
         return x
 
-    def evolve(self):
-        generator32x32_model = Generator32x32()
+    def evolve(self, device):
+        generator32x32_model = Generator32x32().to(device)
 
         generator32x32_model.fc = self.fc
 
@@ -533,8 +533,8 @@ class Generator32x32(nn.Module):
 
         return x
 
-    def evolve(self):
-        generator64x64_model = Generator64x64()
+    def evolve(self, device):
+        generator64x64_model = Generator64x64().to(device)
 
         generator64x64_model.fc = self.fc
 
@@ -609,8 +609,8 @@ class Generator64x64(nn.Module):
 
         return x
 
-    def evolve(self):
-        generator128x128_model = Generator128x128()
+    def evolve(self, device):
+        generator128x128_model = Generator128x128().to(device)
 
         generator128x128_model.fc = self.fc
 

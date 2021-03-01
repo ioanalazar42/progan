@@ -77,8 +77,8 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         critic_model = Critic4x4().to(DEVICE)
         generator_model = Generator4x4().to(DEVICE)
     else:
-        critic_model = critic_model.evolve()
-        generator_model = generator_model.evolve()
+        critic_model = critic_model.evolve(DEVICE)
+        generator_model = generator_model.evolve(DEVICE)
     
     # Set up Adam optimizers for both models.
     critic_optimizer = optim.Adam(critic_model.parameters(), lr=args.learning_rate, betas=(0, 0.9))
