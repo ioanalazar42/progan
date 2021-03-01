@@ -63,7 +63,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     images = None
 
     # Load and preprocess images:
-    images = load_images(config['data_dir'], config['training_set_size'], network_size)
+    images = load_images(config['data_dir'], config['training_set_size'], image_size=network_size)
 
     if network_size == 4:
         critic_model = Critic4x4().to(DEVICE)
