@@ -18,6 +18,16 @@ from utils import sample_gradient_l2_norm
 # Define some constants.
 EXPERIMENT_ID = int(time.time()) # Used to create new directories to save results of individual experiments
 
+# Map each network size to the corresponding number of epochs it will train. 
+NUM_EPOCHS = {
+    4: 1, 
+    8: 1,
+    16: 1,
+    32: 1,
+    64: 1,
+    128: 1
+}
+
 # Directories to save results of experiments.
 DEFAULT_IMG_DIR = f'images/{EXPERIMENT_ID}'
 DEFAULT_TENSORBOARD_DIR = f'tensorboard/{EXPERIMENT_ID}'
@@ -28,8 +38,6 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 PARSER = argparse.ArgumentParser()
 
 PARSER.add_argument('--data_dir', default='/home/datasets/celeba-aligned')
-PARSER.add_argument('--load_critic_model_path')
-PARSER.add_argument('--load_generator_model_path')
 PARSER.add_argument('--save_image_dir', default=DEFAULT_IMG_DIR)
 PARSER.add_argument('--save_model_dir', default=DEFAULT_MODEL_DIR)
 PARSER.add_argument('--tensorboard_dir', default=DEFAULT_TENSORBOARD_DIR)
@@ -84,7 +92,9 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     critic_optimizer = optim.Adam(critic_model.parameters(), lr=args.learning_rate, betas=(0, 0.9))
     generator_optimizer = optim.Adam(generator_model.parameters(), lr=args.learning_rate, betas=(0, 0.9))
 
-    for epoch in range(args.num_epochs):
+    num_epochs = NUM_EPOCHS[network_size]
+
+    for epoch in range(num_epochs):
         start_time = timer()
         
         # Variables for recording statistics.
