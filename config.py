@@ -22,7 +22,7 @@ _CONFIGURATIONS = {
             32: 10000,
             64: 20000,
             128: 40000
-        }
+        },
         epoch_length_per_network: {
             4: 1000,
             8: 5000,
@@ -30,7 +30,7 @@ _CONFIGURATIONS = {
             32: 20000,
             64: 40000,
             128: 80000
-        }
+        },
     },
     'test_saving_data': {
         data_dir: '/home/datasets/celeba-aligned',
@@ -52,7 +52,7 @@ _CONFIGURATIONS = {
             32: 2,
             64: 2,
             128: 2
-        }
+        },
         epoch_length_per_network: {
             4: 4,
             8: 4,
@@ -60,7 +60,7 @@ _CONFIGURATIONS = {
             32: 4,
             64: 4,
             128: 4
-        }
+        },
     },
     'test_dry_run': {
         data_dir: '/home/datasets/celeba-aligned',
@@ -82,7 +82,7 @@ _CONFIGURATIONS = {
             32: 2,
             64: 2,
             128: 2
-        }
+        },
         epoch_length_per_network: {
             4: 4,
             8: 4,
@@ -90,7 +90,7 @@ _CONFIGURATIONS = {
             32: 4,
             64: 4,
             128: 4
-        }
+        },
     },
 }
 
