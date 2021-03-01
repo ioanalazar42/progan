@@ -153,7 +153,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             print(f'\nSaving critic model as "{save_critic_model_path}"...')
             torch.save(critic_model.state_dict(), save_critic_model_path)
             
-            save_generator_model_path = f'{config['save_model_dir']}/generator-{network_size}x{network_size}-{epoch}.pth'
+            save_generator_model_path = f'{config["save_model_dir"]}/generator-{network_size}x{network_size}-{epoch}.pth'
             print(f'Saving generator model as "{save_generator_model_path}"...\n')
             torch.save(generator_model.state_dict(), save_generator_model_path)
 
