@@ -30,7 +30,7 @@ _CONFIGURATIONS = {
             32: 20000,
             64: 40000,
             128: 80000
-        },
+        }
     },
     'test_saving_data': {
         data_dir: '/home/datasets/celeba-aligned',
@@ -60,7 +60,7 @@ _CONFIGURATIONS = {
             32: 4,
             64: 4,
             128: 4
-        },
+        }
     },
     'test_dry_run': {
         data_dir: '/home/datasets/celeba-aligned',
@@ -90,8 +90,8 @@ _CONFIGURATIONS = {
             32: 4,
             64: 4,
             128: 4
-        },
-    },
+        }
+    }
 }
 
 def get_config(config_name):
