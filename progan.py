@@ -149,7 +149,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             and epoch > 0 
             and (epoch % config['model_save_frequency'] == 0 or epoch == config['num_epochs'] - 1)):
             
-            save_critic_model_path = f'{config['save_model_dir']}/critic-{network_size}x{network_size}-{epoch}.pth'
+            save_critic_model_path = f'{config["save_model_dir"]}/critic-{network_size}x{network_size}-{epoch}.pth'
             print(f'\nSaving critic model as "{save_critic_model_path}"...')
             torch.save(critic_model.state_dict(), save_critic_model_path)
             
@@ -163,7 +163,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 generated_images = generator_model(fixed_latent_space_vectors).detach()
             generated_images = F.interpolate(generated_images, scale_factor= 128 / network_size, mode='nearest')
             grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
-            torchvision.utils.save_image(generated_images, f'{config['save_model_dir']}/{total_training_steps}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
+            torchvision.utils.save_image(generated_images, f'{config["save_model_dir"]}/{total_training_steps}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
 
             writer.add_image('training/generated-images', grid_images, epoch)
         
