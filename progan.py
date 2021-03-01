@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 
+from config import get_config
 from datareader import load_images
 from network import Critic4x4, Generator4x4
 from timeit import default_timer as timer
@@ -18,16 +19,6 @@ from utils import sample_gradient_l2_norm
 # Define some constants.
 EXPERIMENT_ID = int(time.time()) # Used to create new directories to save results of individual experiments
 
-# Map each network size to the corresponding number of epochs it will train. 
-NUM_EPOCHS = {
-    4: 1, 
-    8: 1,
-    16: 1,
-    32: 1,
-    64: 1,
-    128: 1
-}
-
 # Directories to save results of experiments.
 DEFAULT_IMG_DIR = f'images/{EXPERIMENT_ID}'
 DEFAULT_TENSORBOARD_DIR = f'tensorboard/{EXPERIMENT_ID}'
@@ -36,30 +27,23 @@ DEFAULT_MODEL_DIR = f'models/{EXPERIMENT_ID}'
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 PARSER = argparse.ArgumentParser()
-
-PARSER.add_argument('--data_dir', default='/home/datasets/celeba-aligned')
-PARSER.add_argument('--save_image_dir', default=DEFAULT_IMG_DIR)
-PARSER.add_argument('--save_model_dir', default=DEFAULT_MODEL_DIR)
-PARSER.add_argument('--tensorboard_dir', default=DEFAULT_TENSORBOARD_DIR)
-PARSER.add_argument('--dry_run', default=False, type=bool)
-PARSER.add_argument('--model_save_frequency', default=4, type=int)
-
-PARSER.add_argument('--training_set_size', default=99999999, type=int)
-PARSER.add_argument('--epoch_length', default=2500, type=int)
-PARSER.add_argument('--gradient_penalty_factor', default=10, type=float)
-PARSER.add_argument('--learning_rate', default=0.0001, type=float)
-PARSER.add_argument('--mini_batch_size', default=2, type=int)
-PARSER.add_argument('--num_critic_training_steps', default=2, type=int)
-PARSER.add_argument('--num_epochs', default=20, type=int)
-PARSER.add_argument('--transition_length', default=25000, type=int)
+# The running configuration can be passed as a command line argument. The configuration defines parameters like: size of training set, number of epochs etc. 
+PARRSER.add_argument('--configuration', default='default')
 
 args = PARSER.parse_args()
 
+config = get_config(args.configuration) # Get the current configuration.
+
+# Set the directories to save models, images and tensorboard data according to the EXPERIMENT_ID. 
+config['save_image_dir'] = DEFAULT_IMG_DIR
+config['tensorboard_dir'] = DEFAULT_TENSORBOARD_DIR
+config['save_model_dir'] = DEFAULT_MODEL_DIR
+
 # Create directories for images, tensorboard results and saved models.
-if not args.dry_run:
-    os.makedirs(args.save_image_dir)
-    os.makedirs(args.tensorboard_dir)
-    os.makedirs(args.save_model_dir)
+if not config['dry_run']:
+    os.makedirs(config['save_image_dir'])
+    os.makedirs(config['tensorboard_dir'])
+    os.makedirs(config['save_model_dir'])
 else:
     print('Dry run! Just for testing, data is not saved')
 
@@ -72,14 +56,14 @@ random_values = random_state.standard_normal([64, 512, 1, 1], dtype=np.float32)
 fixed_latent_space_vectors = torch.tensor(random_values, device=DEVICE)
 
 # Set up TensorBoard.
-writer = SummaryWriter(args.tensorboard_dir)
+writer = SummaryWriter(config['tensorboard_dir'])
 
 for network_size in [4, 8, 16, 32, 64, 128]:
     # Deallocate previous images.
     images = None
 
     # Load and preprocess images:
-    images = load_images(args.data_dir, args.training_set_size, network_size)
+    images = load_images(config['data_dir'], config['training_set_size'], network_size)
 
     if network_size == 4:
         critic_model = Critic4x4().to(DEVICE)
@@ -89,12 +73,10 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         generator_model = generator_model.evolve(DEVICE)
     
     # Set up Adam optimizers for both models.
-    critic_optimizer = optim.Adam(critic_model.parameters(), lr=args.learning_rate, betas=(0, 0.9))
-    generator_optimizer = optim.Adam(generator_model.parameters(), lr=args.learning_rate, betas=(0, 0.9))
+    critic_optimizer = optim.Adam(critic_model.parameters(), lr=config['learning_rate'], betas=(0, 0.9))
+    generator_optimizer = optim.Adam(generator_model.parameters(), lr=config['learning_rate'], betas=(0, 0.9))
 
-    num_epochs = NUM_EPOCHS[network_size]
-
-    for epoch in range(num_epochs):
+    for epoch in range(config['num_epochs']):
         start_time = timer()
         
         # Variables for recording statistics.
@@ -103,25 +85,25 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         average_critic_loss = 0.0
         average_generator_loss = 0.0
 
-        # Train: perform `args.epoch_length` mini-batch updates per "epoch".
-        for i in range(args.epoch_length):
+        # Train: For every epoch, perform the number of mini-batch updates that corresonds to the current network size.
+        for i in range(config['epoch_length_per_network'][network_size]):
 
             if network_size > 4 and critic_model.residual_influence > 0:
-                critic_model.residual_influence -= 1 / args.transition_length
-                generator_model.residual_influence -= 1 / args.transition_length
+                critic_model.residual_influence -= 1 / config['transition_length_per_network'][network_size]
+                generator_model.residual_influence -= 1 / config['transition_length_per_network'][network_size]
 
             # Train the critic:
-            for i in range(args.num_critic_training_steps):
+            for i in range(config['num_critic_training_steps']):
                 critic_model.zero_grad()
 
                 # Evaluate a mini-batch of real images.
-                random_indexes = np.random.choice(len(images), args.mini_batch_size)
+                random_indexes = np.random.choice(len(images), config['mini_batch_size'])
                 real_images = torch.tensor(images[random_indexes], device=DEVICE)
 
                 real_scores = critic_model(real_images)
 
                 # Evaluate a mini-batch of generated images.
-                random_latent_space_vectors = torch.randn(args.mini_batch_size, 512, device=DEVICE)
+                random_latent_space_vectors = torch.randn(config['mini_batch_size'], 512, device=DEVICE)
                 generated_images = generator_model(random_latent_space_vectors)
 
                 generated_scores = critic_model(generated_images.detach()) # TODO: Why exactly is `.detach` required?
@@ -129,14 +111,14 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 gradient_l2_norm = sample_gradient_l2_norm(critic_model, real_images, generated_images, DEVICE)
                 
                 # Update the weights.
-                loss = torch.mean(generated_scores) - torch.mean(real_scores) + args.gradient_penalty_factor * gradient_l2_norm  # The critic's goal is for `generated_scores` to be small and `real_scores` to be big. I don't know why we had to overcomplicate things and call this "Wasserstein".
+                loss = torch.mean(generated_scores) - torch.mean(real_scores) + config['gradient_penalty_factor'] * gradient_l2_norm  # The critic's goal is for `generated_scores` to be small and `real_scores` to be big. I don't know why we had to overcomplicate things and call this "Wasserstein".
                 loss.backward()
                 critic_optimizer.step()
 
                 # Record some statistics.
-                average_critic_loss += loss.item() / args.num_critic_training_steps / args.epoch_length
-                average_critic_real_performance += real_scores.mean().item() / args.num_critic_training_steps / args.epoch_length
-                average_critic_generated_performance += generated_scores.mean().item() / args.num_critic_training_steps / args.epoch_length
+                average_critic_loss += loss.item() / config['num_critic_training_steps'] / config['epoch_length_per_network'][network_size]
+                average_critic_real_performance += real_scores.mean().item() / config['num_critic_training_steps'] / config['epoch_length_per_network'][network_size]
+                average_critic_generated_performance += generated_scores.mean().item() / config['num_critic_training_steps'] / config['epoch_length_per_network'][network_size]
 
             # Train the generator:
             generator_model.zero_grad()
@@ -148,7 +130,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             generator_optimizer.step()
 
             # Record some statistics.
-            average_generator_loss += loss.item() / args.epoch_length
+            average_generator_loss += loss.item() / config['epoch_length_per_network'][network_size]
      
         # Record statistics.
         total_training_steps += 1
@@ -163,25 +145,25 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             f'Time: {time_elapsed:.3f}s')
 
         # Save the model parameters at a specified interval.
-        if (not args.dry_run 
+        if (not config['dry_run'] 
             and epoch > 0 
-            and (epoch % args.model_save_frequency == 0 or epoch == args.num_epochs - 1)):
+            and (epoch % config['model_save_frequency'] == 0 or epoch == config['num_epochs'] - 1)):
             
-            save_critic_model_path = f'{args.save_model_dir}/critic-{network_size}x{network_size}-{epoch}.pth'
+            save_critic_model_path = f'{config['save_model_dir']}/critic-{network_size}x{network_size}-{epoch}.pth'
             print(f'\nSaving critic model as "{save_critic_model_path}"...')
             torch.save(critic_model.state_dict(), save_critic_model_path)
             
-            save_generator_model_path = f'{args.save_model_dir}/generator-{network_size}x{network_size}-{epoch}.pth'
+            save_generator_model_path = f'{config['save_model_dir']}/generator-{network_size}x{network_size}-{epoch}.pth'
             print(f'Saving generator model as "{save_generator_model_path}"...\n')
             torch.save(generator_model.state_dict(), save_generator_model_path)
 
         # Save images.
-        if not args.dry_run:
+        if not config['dry_run']:
             with torch.no_grad():
                 generated_images = generator_model(fixed_latent_space_vectors).detach()
             generated_images = F.interpolate(generated_images, scale_factor= 128 / network_size, mode='nearest')
             grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
-            torchvision.utils.save_image(generated_images, f'{args.save_model_dir}/{total_training_steps}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
+            torchvision.utils.save_image(generated_images, f'{config['save_model_dir']}/{total_training_steps}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
 
             writer.add_image('training/generated-images', grid_images, epoch)
         
