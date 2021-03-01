@@ -13,7 +13,7 @@ _CONFIGURATIONS = {
         gradient_penalty_factor: 10,
         learning_rate: 1e-4,
         mini_batch_size: 2,
-        num_critic_training_steps: 2
+        num_critic_training_steps: 2,
         num_epochs: 20,
         transition_length_per_network: {
             4: 500,
@@ -43,7 +43,7 @@ _CONFIGURATIONS = {
         gradient_penalty_factor: 10,
         learning_rate: 1e-4,
         mini_batch_size: 2,
-        num_critic_training_steps: 2
+        num_critic_training_steps: 2,
         num_epochs: 2,
         transition_length_per_network: {
             4: 2,
@@ -73,7 +73,7 @@ _CONFIGURATIONS = {
         gradient_penalty_factor: 10,
         learning_rate: 1e-4,
         mini_batch_size: 2,
-        num_critic_training_steps: 2
+        num_critic_training_steps: 2,
         num_epochs: 2,
         transition_length_per_network: {
             4: 2,
