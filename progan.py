@@ -27,23 +27,26 @@ DEFAULT_MODEL_DIR = f'models/{EXPERIMENT_ID}'
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 PARSER = argparse.ArgumentParser()
-# The running configuration can be passed as a command line argument. The configuration defines parameters like: size of training set, number of epochs etc. 
-PARRSER.add_argument('--configuration', default='default')
+# The running configuration can be passed as a command line argument. The configuration defines parameters like: 
+# size of training set, number of epochs etc. 
+PARSER.add_argument('--configuration', default='default')
 
 args = PARSER.parse_args()
 
 config = get_config(args.configuration) # Get the current configuration.
 
+print(config)
+
 # Set the directories to save models, images and tensorboard data according to the EXPERIMENT_ID. 
-config['save_image_dir'] = DEFAULT_IMG_DIR
-config['tensorboard_dir'] = DEFAULT_TENSORBOARD_DIR
-config['save_model_dir'] = DEFAULT_MODEL_DIR
+save_image_dir = config['save_image_dir'] if 'save_image_dir' in config else DEFAULT_IMG_DIR
+tensorboard_dir = config['tensorboard_dir'] if 'tensorboard_dir' in config else DEFAULT_TENSORBOARD_DIR
+save_model_dir = config['save_model_dir'] if 'save_model_dir' in config else DEFAULT_MODEL_DIR
 
 # Create directories for images, tensorboard results and saved models.
 if not config['dry_run']:
-    os.makedirs(config['save_image_dir'])
-    os.makedirs(config['tensorboard_dir'])
-    os.makedirs(config['save_model_dir'])
+    os.makedirs(save_image_dir)
+    os.makedirs(tensorboard_dir)
+    os.makedirs(save_model_dir)
 else:
     print('Dry run! Just for testing, data is not saved')
 
@@ -52,11 +55,11 @@ total_training_steps = 0
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 # Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
 random_state = np.random.Generator(np.random.PCG64(np.random.SeedSequence(44442222)))
-random_values = random_state.standard_normal([64, 512, 1, 1], dtype=np.float32)
+random_values = random_state.standard_normal([64, 512], dtype=np.float32)
 fixed_latent_space_vectors = torch.tensor(random_values, device=DEVICE)
 
 # Set up TensorBoard.
-writer = SummaryWriter(config['tensorboard_dir'])
+writer = SummaryWriter(tensorboard_dir)
 
 for network_size in [4, 8, 16, 32, 64, 128]:
     # Deallocate previous images.
@@ -149,11 +152,11 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             and epoch > 0 
             and (epoch % config['model_save_frequency'] == 0 or epoch == config['num_epochs'] - 1)):
             
-            save_critic_model_path = f'{config["save_model_dir"]}/critic-{network_size}x{network_size}-{epoch}.pth'
+            save_critic_model_path = f'{save_model_dir}/critic-{network_size}x{network_size}-{epoch}.pth'
             print(f'\nSaving critic model as "{save_critic_model_path}"...')
             torch.save(critic_model.state_dict(), save_critic_model_path)
             
-            save_generator_model_path = f'{config["save_model_dir"]}/generator-{network_size}x{network_size}-{epoch}.pth'
+            save_generator_model_path = f'{save_model_dir}/generator-{network_size}x{network_size}-{epoch}.pth'
             print(f'Saving generator model as "{save_generator_model_path}"...\n')
             torch.save(generator_model.state_dict(), save_generator_model_path)
 
@@ -163,7 +166,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 generated_images = generator_model(fixed_latent_space_vectors).detach()
             generated_images = F.interpolate(generated_images, scale_factor= 128 / network_size, mode='nearest')
             grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
-            torchvision.utils.save_image(generated_images, f'{config["save_model_dir"]}/{total_training_steps}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
+            torchvision.utils.save_image(generated_images, f'{save_image_dir}/{total_training_steps:03d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
 
             writer.add_image('training/generated-images', grid_images, epoch)
         
