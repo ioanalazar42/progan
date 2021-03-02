@@ -1,20 +1,23 @@
-'''Defines the architectures of the ProGAN Critics and Generators. There are multiple architectures corresponding to 
-    the different image sizes that are dealt with, i.e. 4x4, 8x8, 16x16, ...
-    New, untrained layers are added gradually to an already trained network so the trained parameters are not affected.'''
+'''Defines the architectures of the ProGAN Critics and Generators. 
+
+There are multiple architectures corresponding to the different image sizes that are dealt with, i.e. 4x4, 8x8, 16x16, ...
+New, untrained layers are added gradually to an already trained network so the trained parameters are not affected.
+'''
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 def _upsample(x):
     '''Changes a [N, Depth, Height, Width] tensor to [N, Depth, 2 * Height, 2 * Width].'''
 
-    return F.interpolate(x, scale_factor=2, mode='nearest')
+    return F.interpolate(x, scale_factor=2, mode='nearest', recompute_scale_factor=False)
 
 def _downsample(x):
     '''Changes a [N, Depth, Height, Width] tensor to [N, Depth, 0.5 * Height, 0.5 * Width].'''
 
-    return F.interpolate(x, scale_factor=0.5, mode='nearest')
+    return F.interpolate(x, scale_factor=0.5, mode='nearest', recompute_scale_factor=False)
 
 class Critic128x128(nn.Module):
 

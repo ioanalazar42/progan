@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 import os
+import pprint
 import time
 import torch
 import torch.nn as nn
@@ -8,7 +9,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 
-from config import get_config
+from config import get_configuration
 from datareader import load_images
 from network import Critic4x4, Generator4x4
 from timeit import default_timer as timer
@@ -24,6 +25,7 @@ DEFAULT_IMG_DIR = f'images/{EXPERIMENT_ID}'
 DEFAULT_TENSORBOARD_DIR = f'tensorboard/{EXPERIMENT_ID}'
 DEFAULT_MODEL_DIR = f'models/{EXPERIMENT_ID}'
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+PRETTY_PRINTER = pprint.PrettyPrinter(indent=4)
 
 # The running configuration can be passed as a command line argument. The configuration defines parameters like: 
 # size of training set, number of epochs etc. 
@@ -31,8 +33,9 @@ PARSER = argparse.ArgumentParser()
 PARSER.add_argument('--configuration', default='default')
 args = PARSER.parse_args()
 
-config = get_config(args.configuration) # Get the current configuration.
-print(config) # TODO: make the printing prettier
+config = get_configuration(args.configuration) # Get the current configuration.
+print(f'Using configuration "{args.configuration}".\n')
+PRETTY_PRINTER.pprint(config.to_dictionary())
 
 # Set the directories to save models, images and tensorboard data according to the EXPERIMENT_ID. 
 save_image_dir = config.get('save_image_dir', default=DEFAULT_IMG_DIR)
@@ -45,7 +48,7 @@ if config.is_disabled('dry_run'):
     os.makedirs(tensorboard_dir)
     os.makedirs(save_model_dir)
 else:
-    print('Dry run! Just for testing, data is not saved')
+    print('\nDry run! Just for testing, data is not saved')
 
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 # Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
@@ -160,7 +163,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         if config.is_disabled('dry_run'):
             with torch.no_grad():
                 generated_images = generator_model(fixed_latent_space_vectors).detach()
-            generated_images = F.interpolate(generated_images, scale_factor= 128 / network_size, mode='nearest')
+            generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
             grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
             torchvision.utils.save_image(generated_images, f'{save_image_dir}/{total_training_steps:03d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
 

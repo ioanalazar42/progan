@@ -1,5 +1,8 @@
-'''Define different configurations with custom parameters to facilitate running experiments.
-    Configurations can be specified as a command line argument.'''
+'''Defines configurations for experiments.
+
+Defines different configurations with custom parameters to run experiments.
+Configurations can be specified as a command line argument.
+'''
 
 _CONFIGURATIONS = {
     'default': {
@@ -84,12 +87,16 @@ _CONFIGURATIONS = {
     }
 }
 
-def get_config(config_name):
-    return Config(_CONFIGURATIONS[config_name])
+def get_configuration(name):
+    return Configuration(_CONFIGURATIONS[name])
 
-class Config():
+class Configuration():
+    
     def __init__(self, configuration):
         self.configuration = configuration
+
+    def to_dictionary(self):
+        return self.configuration
 
     def is_enabled(self, field):
         return field in self.configuration and self.configuration[field]
@@ -98,7 +105,4 @@ class Config():
         return not self.is_enabled(field)
 
     def get(self, field, default=None):
-        if self.is_enabled(field):
-            return self.configuration[field]
-        else:
-            return default
+        return self.configuration[field] if self.is_enabled(field) else default
