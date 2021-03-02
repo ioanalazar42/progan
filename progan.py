@@ -78,7 +78,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     critic_optimizer = optim.Adam(critic_model.parameters(), lr=config.get('learning_rate'), betas=(0, 0.9))
     generator_optimizer = optim.Adam(generator_model.parameters(), lr=config.get('learning_rate'), betas=(0, 0.9))
 
-    for epoch in range(config.get('num_epochs')):
+    for epoch in range(config.get('num_epochs_per_network')[network_size]):
         start_time = timer()
         
         # Variables for recording statistics.
@@ -149,7 +149,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         # Save the model parameters at a specified interval.
         if (config.is_disabled('dry_run') 
             and epoch > 0 
-            and (epoch % config.get('model_save_frequency') == 0 or epoch == config.get('num_epochs') - 1)):
+            and (epoch % config.get('model_save_frequency') == 0 or epoch == config.get('num_epochs_per_network')[network_size] - 1)):
             
             save_critic_model_path = f'{save_model_dir}/critic-{network_size}x{network_size}-{epoch}.pth'
             print(f'\nSaving critic model as "{save_critic_model_path}"...')

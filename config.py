@@ -11,24 +11,30 @@ _CONFIGURATIONS = {
         'training_set_size': 99999999,
         'gradient_penalty_factor': 10,
         'learning_rate': 1e-4,
-        'mini_batch_size': 2,
+        'mini_batch_size': 256,
         'num_critic_training_steps': 2,
-        'num_epochs': 20,
+        'num_epochs_per_network': {
+            4: 10,
+            8: 20,
+            16: 20,
+            32: 20,
+            64: 20,
+            128: 20
+        },
         'transition_length_per_network': {
-            4: 500,
-            8: 2500,
-            16: 5000,
-            32: 10000,
-            64: 20000,
-            128: 40000
+            8: 25000,
+            16: 25000,
+            32: 25000,
+            64: 25000,
+            128: 25000
         },
         'epoch_length_per_network': {
-            4: 1000,
-            8: 5000,
-            16: 10000,
-            32: 20000,
-            64: 40000,
-            128: 80000
+            4: 2500,
+            8: 2500,
+            16: 2500,
+            32: 2500,
+            64: 2500,
+            128: 2500
         }
     },
     'test_saving_data': {
@@ -40,9 +46,15 @@ _CONFIGURATIONS = {
         'learning_rate': 1e-4,
         'mini_batch_size': 2,
         'num_critic_training_steps': 2,
-        'num_epochs': 2,
+        'num_epochs_per_network': {
+            4: 10,
+            8: 20,
+            16: 20,
+            32: 20,
+            64: 20,
+            128: 20
+        },
         'transition_length_per_network': {
-            4: 2,
             8: 2,
             16: 2,
             32: 2,
@@ -67,9 +79,15 @@ _CONFIGURATIONS = {
         'learning_rate': 1e-4,
         'mini_batch_size': 2,
         'num_critic_training_steps': 2,
-        'num_epochs': 2,
+        'num_epochs_per_network': {
+            4: 10,
+            8: 20,
+            16: 20,
+            32: 20,
+            64: 20,
+            128: 20
+        },
         'transition_length_per_network': {
-            4: 2,
             8: 2,
             16: 2,
             32: 2,
