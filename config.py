@@ -4,6 +4,7 @@
 _CONFIGURATIONS = {
     'default': {
         'data_dir': '/home/datasets/celeba-aligned',
+        'dry_run': False,
         'training_set_size': 99999999,
         'gradient_penalty_factor': 10,
         'learning_rate': 1e-4,
@@ -84,4 +85,20 @@ _CONFIGURATIONS = {
 }
 
 def get_config(config_name):
-    return _CONFIGURATIONS[config_name]
+    return Config(_CONFIGURATIONS[config_name])
+
+class Config():
+    def __init__(self, configuration):
+        self.configuration = configuration
+
+    def is_enabled(self, field):
+        return field in self.configuration and self.configuration[field]
+
+    def is_disabled(self, field):
+        return not self.is_enabled(field)
+
+    def get(self, field, default=None):
+        if self.is_enabled(field):
+            return self.configuration[field]
+        else:
+            return default
