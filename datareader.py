@@ -6,21 +6,6 @@ import os
 from skimage import io, transform
 
 
-def _center_crop_image(image):
-    height = image.shape[0]
-    width = image.shape[1]
-    crop_size = height if height < width else width
-
-    y = int((height - crop_size) / 2)
-    x = int((width - crop_size) / 2)
-
-    return image[y : crop_size, x : crop_size]
-
-
-def _resize_image(image, width, height):
-    return transform.resize(image, [height, width, 3], anti_aliasing=True, mode='constant')
-
-
 def _mean_normalize(image):
     '''Takes an image with float values between [0, 1] and normalizes it to [-1, 1]'''
     return 2 * image - 1
@@ -35,7 +20,7 @@ def _load_image(path, image_size):
         print(f'Image "{path}" is grayscale!')
         image = np.dstack([image, image, image])
 
-    image = _mean_normalize(_resize_image(_center_crop_image(image), image_size, image_size))
+    image = _mean_normalize(image)
 
     # Change the image_size x image_size x 3 image to 3 x image_size x image_size as expected by PyTorch.
     return image.transpose(2, 0, 1)
