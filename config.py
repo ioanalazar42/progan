@@ -4,10 +4,23 @@ Defines different configurations with custom parameters to run experiments.
 Configurations can be specified as a command line argument.
 '''
 
+_REQUIRED_FIELDS = [
+    'data_dir',
+    'model_save_frequency',
+    'training_set_size',
+    'gradient_penalty_factor',
+    'learning_rate',
+    'mini_batch_size',
+    'num_critic_training_steps',
+    'num_epochs_per_network',
+    'transition_length_per_network',
+    'epoch_length_per_network']
+
 _CONFIGURATIONS = {
     'default': {
         'data_dir': '/home/datasets/celeba-aligned',
         'dry_run': False,
+        'model_save_frequency': 4,
         'training_set_size': 99999999,
         'gradient_penalty_factor': 10,
         'learning_rate': 1e-4,
@@ -112,6 +125,7 @@ class Configuration():
     
     def __init__(self, configuration):
         self.configuration = configuration
+        self.required_fields = _REQUIRED_FIELDS
 
     def to_dictionary(self):
         return self.configuration
@@ -124,3 +138,14 @@ class Configuration():
 
     def get(self, field, default=None):
         return self.configuration[field] if self.is_enabled(field) else default
+
+    def missing_fields(self):
+        has_required_fields = True
+        missing_fields = []
+
+        for field in self.configuration:
+            if field not in self.required_fields:
+                missing_fields.append(field)
+                has_required_fields = False
+
+        return None if has_required_fields else missing_fields
