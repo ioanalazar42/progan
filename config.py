@@ -143,9 +143,9 @@ class Configuration():
         has_required_fields = True
         missing_fields = []
 
-        for field in self.configuration:
-            if field not in self.required_fields:
-                missing_fields.append(field)
+        for required_field in self.required_fields:
+            if required_field not in self.configuration:
+                missing_fields.append(required_field)
                 has_required_fields = False
 
         return None if has_required_fields else missing_fields
