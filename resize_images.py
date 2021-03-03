@@ -4,38 +4,13 @@ Resize images in the CelebA dataset to prepare them for different network archit
 Save images in separate directories that correspond to their new sizes.
 '''
 
+import argparse
 import numpy as np
 import os
 import torchvision
 
+from PIL import Image
 from skimage import io, transform
-
-TRAINING_IMAGES_DIR_PATH = '/home/datasets/'
-file_names = os.listdir(TRAINING_IMAGES_DIR_PATH)
-
-images = []
-print(f'\nLoading {len(file_names)} images from {dir_path}...\n')
-
-# Load all images in their original size.
-for i, file_name in enumerate(file_names):
-    image_path = os.path.join(dir_path, file_name)
-    images.append(_load_image(image_path))
-
-    if i > 0 and i % 10000 == 0:
-        print(f'Loaded {i}/{len(images)} images so far')
-
-# Resize all images and save them in separate directories.
-for image_size in [4, 8, 16, 32, 64, 128]:
-    save_image_dir = f'{TRAINING_IMAGES_DIR_PATH}/celeba-{image_size}x{image_size}'
-    os.makedirs(save_image_dir)
-
-    file_id = 1
-        
-    for image in images:
-        resized_image = _resize_image(image)
-        torchvision.utils.save_image(resized_image, f'{save_image_dir}/{file_id:06d}.jpg', padding=2, normalize=True)
-        file_id += 1
-
 
 def _center_crop_image(image):
     height = image.shape[0]
@@ -61,5 +36,44 @@ def _load_image(path):
         image = np.dstack([image, image, image])
 
     image = _center_crop_image(image)
-
+    
     return image
+
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument('--training_set_size', default=99999999, type=int)
+args = PARSER.parse_args()
+
+# Path to all training images. Will contain directories for images of different sizes to use for the ProGAN.
+TRAINING_IMAGES_DIR_PATH = '/home/datasets/celeba-aligned'
+
+# The path to the original CelebA images.
+ORIGINAL_IMAGES_DIR_PATH = f'{TRAINING_IMAGES_DIR_PATH}/original'
+
+file_names = os.listdir(ORIGINAL_IMAGES_DIR_PATH)[:args.training_set_size]
+
+images = []
+print(f'\nLoading {len(file_names)} images from {ORIGINAL_IMAGES_DIR_PATH}...\n')
+
+# Load all images in their original size.
+for i, file_name in enumerate(file_names):
+    image_path = os.path.join(ORIGINAL_IMAGES_DIR_PATH, file_name)
+    images.append(_load_image(image_path))
+
+    if i > 0 and i % 10000 == 0:
+        print(f'Loaded {i}/{len(file_names)} images so far')
+
+# Resize all images and save them in separate directories.
+for image_size in [4, 8, 16, 32, 64, 128]:
+    save_image_dir = f'{TRAINING_IMAGES_DIR_PATH}/{image_size}x{image_size}'
+    os.makedirs(save_image_dir)
+
+    file_id = 1
+        
+    for image in images:
+        resized_image = _resize_image(image, image_size, image_size)
+
+        Image.fromarray((255 * resized_image).astype(np.uint8)).save(f'{save_image_dir}/{file_id:06d}.jpg')
+        file_id += 1
+
+    print(f'\nLoaded {file_id - 1} images of size {image_size}x{image_size} in directory {save_image_dir}/{image_size}x{image_size}.\n')
+
