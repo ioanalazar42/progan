@@ -10,18 +10,16 @@ import torchvision
 
 from skimage import io, transform
 
-ORIGINAL_IMAGE_SIZE = [218, 178]
 TRAINING_IMAGES_DIR_PATH = '/home/datasets/celeba-aligned/'
-
 file_names = os.listdir(TRAINING_IMAGES_DIR_PATH)
 
-images = np.empty([len(file_names), 3, ORIGINAL_IMAGE_SIZE[0], ORIGINAL_IMAGE_SIZE[1]], dtype=np.float32)
+images = []
 print(f'\nLoading {len(file_names)} images from {dir_path}...\n')
 
 # Load all images in their original size.
 for i, file_name in enumerate(file_names):
     image_path = os.path.join(dir_path, file_name)
-    images[i] = _load_image(image_path)
+    images.append(_load_image(image_path))
 
     if i > 0 and i % 10000 == 0:
         print(f'Loaded {i}/{len(images)} images so far')
@@ -54,11 +52,6 @@ def _resize_image(image, width, height):
     return transform.resize(image, [height, width, 3], anti_aliasing=True, mode='constant')
 
 
-def _mean_normalize(image):
-    '''Takes an image with float values between [0, 1] and normalizes it to [-1, 1]'''
-    return 2 * image - 1
-
-
 def _load_image(path):
     image = io.imread(path)
 
@@ -68,7 +61,6 @@ def _load_image(path):
         image = np.dstack([image, image, image])
 
     #image = _mean_normalize(_resize_image(_center_crop_image(image), image_size, image_size))
-    image = _mean_normalize(_center_crop_image(image))
+    image = _center_crop_image(image)
 
-    # Change the image_size x image_size x 3 image to 3 x image_size x image_size as expected by PyTorch.
-    return image.transpose(2, 0, 1)
+    return image
