@@ -37,7 +37,7 @@ config = get_configuration(args.configuration) # Get the current configuration.
 
 missing_fields = config.missing_fields()
 if missing_fields:
-    print(f'Configuration {args.configuration} misses the following fields: {missing_fields}\n')
+    raise Exception(f'Configuration {args.configuration} misses the following fields: {missing_fields}\n')
 
 print(f'Using configuration "{args.configuration}".\n')
 PRETTY_PRINTER.pprint(config.to_dictionary())
