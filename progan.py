@@ -75,8 +75,8 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         generator_model = generator_model.evolve(DEVICE)
     
     # Set up Adam optimizers for both models.
-    critic_optimizer = optim.Adam(critic_model.parameters(), lr=config.get('learning_rate'), betas=(0, 0.9))
-    generator_optimizer = optim.Adam(generator_model.parameters(), lr=config.get('learning_rate'), betas=(0, 0.9))
+    critic_optimizer = optim.Adam(critic_model.parameters(), lr=config.get('learning_rate'), betas=(0, 0.99))
+    generator_optimizer = optim.Adam(generator_model.parameters(), lr=config.get('learning_rate'), betas=(0, 0.99))
 
     for epoch in range(config.get('num_epochs_per_network')[network_size]):
         start_time = timer()
