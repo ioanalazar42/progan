@@ -140,12 +140,10 @@ class Configuration():
         return self.configuration[field] if self.is_enabled(field) else default
 
     def missing_fields(self):
-        has_required_fields = True
-        missing_fields = []
+        missing_fields = None
 
         for required_field in self.required_fields:
             if required_field not in self.configuration:
                 missing_fields.append(required_field)
-                has_required_fields = False
 
-        return None if has_required_fields else missing_fields
+        return missing_fields
