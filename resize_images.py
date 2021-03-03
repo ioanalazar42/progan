@@ -10,7 +10,7 @@ import torchvision
 
 from skimage import io, transform
 
-TRAINING_IMAGES_DIR_PATH = '/home/datasets/celeba-aligned/'
+TRAINING_IMAGES_DIR_PATH = '/home/datasets/'
 file_names = os.listdir(TRAINING_IMAGES_DIR_PATH)
 
 images = []
@@ -26,7 +26,7 @@ for i, file_name in enumerate(file_names):
 
 # Resize all images and save them in separate directories.
 for image_size in [4, 8, 16, 32, 64, 128]:
-    save_image_dir = f'{TRAINING_IMAGES_DIR_PATH}/{image_size}x{image_size}'
+    save_image_dir = f'{TRAINING_IMAGES_DIR_PATH}/celeba-{image_size}x{image_size}'
     os.makedirs(save_image_dir)
 
     file_id = 1
@@ -60,7 +60,6 @@ def _load_image(path):
         print(f'Image "{path}" is grayscale!')
         image = np.dstack([image, image, image])
 
-    #image = _mean_normalize(_resize_image(_center_crop_image(image), image_size, image_size))
     image = _center_crop_image(image)
 
     return image
