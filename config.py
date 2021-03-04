@@ -18,7 +18,14 @@ _REQUIRED_FIELDS = [
 
 _CONFIGURATIONS = {
     'default': {
-        'data_dir': '/home/datasets/celeba-aligned',
+        'data_dir_per_network_size': {
+            4: '/home/datasets/celeba-aligned/4x4',
+            8: '/home/datasets/celeba-aligned/8x8',
+            16: '/home/datasets/celeba-aligned/16x16',
+            32: '/home/datasets/celeba-aligned/32x32',
+            64: '/home/datasets/celeba-aligned/64x64',
+            128: '/home/datasets/celeba-aligned/128x128'
+        },
         'dry_run': False,
         'model_save_frequency': 4,
         'training_set_size': 99999999,
@@ -51,7 +58,14 @@ _CONFIGURATIONS = {
         }
     },
     'test_saving_data': {
-        'data_dir': '/home/datasets/celeba-aligned',
+        'data_dir_per_network_size': {
+            4: '/home/datasets/celeba-aligned/4x4',
+            8: '/home/datasets/celeba-aligned/8x8',
+            16: '/home/datasets/celeba-aligned/16x16',
+            32: '/home/datasets/celeba-aligned/32x32',
+            64: '/home/datasets/celeba-aligned/64x64',
+            128: '/home/datasets/celeba-aligned/128x128'
+        },
         'dry_run': False,  # Test if data is saved correctly.
         'model_save_frequency': 4,
         'training_set_size': 10,
@@ -84,7 +98,14 @@ _CONFIGURATIONS = {
         }
     },
     'test_dry_run': {
-        'data_dir': '/home/datasets/celeba-aligned',
+        'data_dir_per_network_size': {
+            4: '/home/datasets/celeba-aligned/4x4',
+            8: '/home/datasets/celeba-aligned/8x8',
+            16: '/home/datasets/celeba-aligned/16x16',
+            32: '/home/datasets/celeba-aligned/32x32',
+            64: '/home/datasets/celeba-aligned/64x64',
+            128: '/home/datasets/celeba-aligned/128x128'
+        },
         'dry_run': True,  # No data is saved.
         'model_save_frequency': 4,
         'training_set_size': 10,

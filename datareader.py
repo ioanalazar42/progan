@@ -11,12 +11,11 @@ def _mean_normalize(image):
     return 2 * image - 1
 
 
-def _load_image(path, image_size):
+def _load_image(path):
     image = io.imread(path)
 
     if image.ndim == 2:
         # Convert grayscale images to RGB
-        # (yes you can actually save a JPEG without RGB info (so like 500x500 instead of 500x500x3), *mind blown*)
         print(f'Image "{path}" is grayscale!')
         image = np.dstack([image, image, image])
 
@@ -33,7 +32,7 @@ def load_images(dir_path, training_set_size, image_size):
 
     for i, file_name in enumerate(file_names):
         image_path = os.path.join(dir_path, file_name)
-        images[i] = _load_image(image_path, image_size)
+        images[i] = _load_image(image_path)
 
         if i > 0 and i % 10000 == 0:
             print(f'Loaded {i}/{len(images)} images so far')
