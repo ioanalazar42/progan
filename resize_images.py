@@ -9,8 +9,7 @@ import numpy as np
 import os
 import torchvision
 
-from PIL import Image
-from skimage import io, transform
+from skimage import img_as_ubyte, io, transform
 
 def _center_crop_image(image):
     height = image.shape[0]
@@ -65,15 +64,12 @@ for i, file_name in enumerate(file_names):
 # Resize all images and save them in separate directories.
 for image_size in [4, 8, 16, 32, 64, 128]:
     save_image_dir = f'{TRAINING_IMAGES_DIR_PATH}/{image_size}x{image_size}'
+    
     os.makedirs(save_image_dir)
 
-    file_id = 1
-        
-    for image in images:
+    for file_id, image in enumerate(images):
         resized_image = _resize_image(image, image_size, image_size)
+        io.imsave(f'{save_image_dir}/{file_id:06d}.jpg', img_as_ubyte(resized_image))        
 
-        Image.fromarray((255 * resized_image).astype(np.uint8)).save(f'{save_image_dir}/{file_id:06d}.jpg')
-        file_id += 1
-
-    print(f'\nLoaded {file_id - 1} images of size {image_size}x{image_size} in directory {save_image_dir}/{image_size}x{image_size}.\n')
+    print(f'\nLoaded {len(images)} images of size {image_size}x{image_size} in directory {save_image_dir}.\n')
 
