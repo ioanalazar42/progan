@@ -21,10 +21,8 @@ def _center_crop_image(image):
 
     return image[y : crop_size, x : crop_size]
 
-
 def _resize_image(image, width, height):
     return transform.resize(image, [height, width, 3], anti_aliasing=True, mode='constant')
-
 
 def _load_image(path):
     image = io.imread(path)
@@ -35,7 +33,7 @@ def _load_image(path):
         image = np.dstack([image, image, image])
 
     image = _center_crop_image(image)
-    
+
     return image
 
 PARSER = argparse.ArgumentParser()
@@ -64,12 +62,11 @@ for i, file_name in enumerate(file_names):
 # Resize all images and save them in separate directories.
 for image_size in [4, 8, 16, 32, 64, 128]:
     save_image_dir = f'{TRAINING_IMAGES_DIR_PATH}/{image_size}x{image_size}'
-    
+
     os.makedirs(save_image_dir)
 
     for file_id, image in enumerate(images):
         resized_image = _resize_image(image, image_size, image_size)
-        io.imsave(f'{save_image_dir}/{file_id:06d}.jpg', img_as_ubyte(resized_image))        
+        io.imsave(f'{save_image_dir}/{file_id:06d}.jpg', img_as_ubyte(resized_image))
 
     print(f'\nLoaded {len(images)} images of size {image_size}x{image_size} in directory {save_image_dir}.\n')
-
