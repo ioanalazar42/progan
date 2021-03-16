@@ -61,11 +61,9 @@ class Critic128x128(nn.Module):
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)  # 3x128x128 -> 3x64x64
             x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
-
-        if self.residual_influence > 0:
-            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
 
         x = F.relu(self.conv2(self.conv2_layernorm(x)))
         x = F.relu(self.conv3(self.conv3_layernorm(x)))
@@ -118,11 +116,9 @@ class Critic64x64(nn.Module):
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)  # 3x64x64 -> 3x32x32
             x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
-
-        if self.residual_influence > 0:
-            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
 
         x = F.relu(self.conv3(self.conv3_layernorm(x)))
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
@@ -133,6 +129,9 @@ class Critic64x64(nn.Module):
 
     def evolve(self, device):
         critic128x128_model = Critic128x128().to(device)
+
+        critic128x128_model.conv2_layernorm = self.conv2_layernorm
+        critic128x128_model.conv2 = self.conv2
 
         critic128x128_model.conv3_layernorm = self.conv3_layernorm
         critic128x128_model.conv3 = self.conv3
@@ -187,11 +186,9 @@ class Critic32x32(nn.Module):
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)  # 3x32x32 -> 3x16x16
             x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
-
-        if self.residual_influence > 0:
-            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
 
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
@@ -201,6 +198,11 @@ class Critic32x32(nn.Module):
 
     def evolve(self, device):
         critic64x64_model = Critic64x64().to(device)
+
+        critic64x64_model.residual_rgb_conv = self.rgb_conv
+
+        critic64x64_model.conv3_layernorm = self.conv3_layernorm
+        critic64x64_model.conv3 = self.conv4
 
         critic64x64_model.conv4_layernorm = self.conv4_layernorm
         critic64x64_model.conv4 = self.conv4
@@ -248,11 +250,9 @@ class Critic16x16(nn.Module):
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)  # 3x16x16 -> 3x8x8
             x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
-
-        if self.residual_influence > 0:
-            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
 
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
         x = self.fc(self.fc_layernorm(x.view(-1, 512 * 4 * 4)))
@@ -261,6 +261,11 @@ class Critic16x16(nn.Module):
 
     def evolve(self, device):
         critic32x32_model = Critic32x32().to(device)
+
+        critic32x32_model.residual_rgb_conv = self.rgb_conv
+
+        critic32x32_model.conv4_layernorm = self.conv4_layernorm
+        critic32x32_model.conv4 = self.conv4
 
         critic32x32_model.conv5_layernorm = self.conv5_layernorm
         critic32x32_model.conv5 = self.conv5
@@ -301,11 +306,9 @@ class Critic8x8(nn.Module):
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)  # 3x8x8 -> 3x4x4
             x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
-
-        if self.residual_influence > 0:
-            x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
 
         x = self.fc(self.fc_layernorm(x.view(-1, 512 * 4 * 4)))
 
@@ -313,6 +316,8 @@ class Critic8x8(nn.Module):
 
     def evolve(self, device):
         critic16x16_model = Critic16x16().to(device)
+
+        critic16x16_model.residual_rgb_conv = self.rgb_conv
 
         critic16x16_model.conv5_layernorm = self.conv5_layernorm
         critic16x16_model.conv5 = self.conv5
@@ -344,6 +349,7 @@ class Critic4x4(nn.Module):
     def evolve(self, device):
         critic8x8_model = Critic8x8().to(device)
 
+        critic8x8_model.residual_rgb_conv = self.rgb_conv
         critic8x8_model.fc_layernorm = self.fc_layernorm
         critic8x8_model.fc = self.fc
 
@@ -369,6 +375,7 @@ class Generator4x4(nn.Module):
         generator8x8_model = Generator8x8().to(device)
 
         generator8x8_model.fc = self.fc
+        generator8x8_model.residual_rgb_conv = self.rgb_conv
 
         return generator8x8_model
 
@@ -405,8 +412,6 @@ class Generator8x8(nn.Module):
         if self.residual_influence > 0:
             x_residual = self.residual_rgb_conv(x_residual)
             x_residual = _upsample(x_residual)  # 3x4x4 -> 3x8x8
-
-        if self.residual_influence > 0:
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
@@ -417,6 +422,11 @@ class Generator8x8(nn.Module):
         generator16x16_model = Generator16x16().to(device)
 
         generator16x16_model.fc = self.fc
+
+        generator16x16_model.conv1_bn = self.conv1_bn
+        generator16x16_model.conv1 = self.conv1
+
+        generator16x16_model.residual_rgb_conv = self.rgb_conv
 
         return generator16x16_model
 
@@ -461,8 +471,6 @@ class Generator16x16(nn.Module):
         if self.residual_influence > 0:
             x_residual = self.residual_rgb_conv(x_residual)
             x_residual = _upsample(x_residual)  # 3x8x8 -> 3x16x16
-
-        if self.residual_influence > 0:
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
@@ -476,6 +484,11 @@ class Generator16x16(nn.Module):
 
         generator32x32_model.conv1_bn = self.conv1_bn
         generator32x32_model.conv1 = self.conv1
+
+        generator32x32_model.conv2_bn = self.conv2_bn
+        generator32x32_model.conv2 = self.conv2
+
+        generator32x32_model.residual_rgb_conv = self.rgb_conv
 
         return generator32x32_model
 
@@ -528,8 +541,6 @@ class Generator32x32(nn.Module):
         if self.residual_influence > 0:
             x_residual = self.residual_rgb_conv(x_residual)
             x_residual = _upsample(x_residual)  # 3x16x16 -> 3x32x32
-
-        if self.residual_influence > 0:
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
@@ -545,7 +556,12 @@ class Generator32x32(nn.Module):
         generator64x64_model.conv1 = self.conv1
 
         generator64x64_model.conv2_bn = self.conv2_bn
-        generator64x64_model.conv2 = self.conv2   
+        generator64x64_model.conv2 = self.conv2
+
+        generator64x64_model.conv3_bn = self.conv3_bn
+        generator64x64_model.conv3 = self.conv3
+
+        generator64x64_model.residual_rgb_conv = self.rgb_conv
 
         return generator64x64_model
 
@@ -604,8 +620,6 @@ class Generator64x64(nn.Module):
         if self.residual_influence > 0:
             x_residual = self.residual_rgb_conv(x_residual)
             x_residual = _upsample(x_residual)  # 3x32x32 -> 3x64x64
-
-        if self.residual_influence > 0:
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
@@ -621,10 +635,15 @@ class Generator64x64(nn.Module):
         generator128x128_model.conv1 = self.conv1
 
         generator128x128_model.conv2_bn = self.conv2_bn
-        generator128x128_model.conv2 = self.conv2   
+        generator128x128_model.conv2 = self.conv2
 
         generator128x128_model.conv3_bn = self.conv3_bn
-        generator128x128_model.conv3 = self.conv3   
+        generator128x128_model.conv3 = self.conv3
+
+        generator128x128_model.conv4_bn = self.conv4_bn
+        generator128x128_model.conv4 = self.conv4
+
+        generator128x128_model.residual_rgb_conv = self.rgb_conv
 
         return generator128x128_model
 
@@ -685,8 +704,6 @@ class Generator128x128(nn.Module):
         if self.residual_influence > 0:
             x_residual = self.residual_rgb_conv(x_residual)
             x_residual = _upsample(x_residual)  # 3x64x64 -> 3x128x128
-
-        if self.residual_influence > 0:
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
