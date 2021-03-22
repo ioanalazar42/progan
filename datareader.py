@@ -8,7 +8,7 @@ from skimage import io, transform
 
 def _mean_normalize(image):
     '''Takes an image with float values between [0, 255] and normalizes it to [-1, 1]'''
-    return 2 * image/255.0 - 1
+    return 2 * image/255 - 1
 
 
 def _load_image(path):
