@@ -105,7 +105,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 gradient_l2_norm = sample_gradient_l2_norm(critic_model, real_images, generated_images, DEVICE)
                 
                 # Update the weights.
-                loss = torch.mean(generated_scores) - torch.mean(real_scores) + CONFIG.get('gradient_penalty_factor') * gradient_l2_norm  # The critic's goal is for `generated_scores` to be small and `real_scores` to be big. I don't know why we had to overcomplicate things and call this "Wasserstein".
+                loss = torch.mean(generated_scores) - torch.mean(real_scores) + CONFIG.get('gradient_penalty_factor') * gradient_l2_norm  # The critic's goal is for `generated_scores` to be small and `real_scores` to be big.
                 loss.backward()
                 critic_optimizer.step()
 
@@ -113,6 +113,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 average_critic_loss += loss.item() / CONFIG.get('num_critic_training_steps') / CONFIG.get('epoch_length_per_network')[network_size]
                 average_critic_real_performance += real_scores.mean().item() / CONFIG.get('num_critic_training_steps') / CONFIG.get('epoch_length_per_network')[network_size]
                 average_critic_generated_performance += generated_scores.mean().item() / CONFIG.get('num_critic_training_steps') / CONFIG.get('epoch_length_per_network')[network_size]
+                distinguishability_score = average_critic_real_performance - average_critic_generated_performance # Measure how different generated images are from real images. This should trend towards 0 as fake images become indistinguishable from real ones to the critic.
 
             # Train the generator:
             generator_model.zero_grad()
@@ -136,6 +137,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             f'Generator Loss: {average_generator_loss:.6f} - '
             f'Average C(x): {average_critic_real_performance:.6f} - '
             f'Average C(G(x)): {average_critic_generated_performance:.6f} - '
+            f'C(x) - C(G(x)) ("distinguishability" score): {distinguishability_score:.6f}'
             f'Time: {time_elapsed:.3f}s')
 
         # Save the model parameters at a specified interval.
@@ -164,6 +166,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             WRITER.add_scalar('training/critic/loss', average_critic_loss, global_epoch_count)
             WRITER.add_scalar('training/critic/real-performance', average_critic_real_performance, global_epoch_count)
             WRITER.add_scalar('training/critic/generated-performance', average_critic_generated_performance, global_epoch_count)
+            WRITER.add_scalar('training/distinguishability-score', distinguishability_score, global_epoch_count)
             WRITER.add_scalar('training/epoch-duration', time_elapsed, global_epoch_count)
 
 print('Finished training!')
