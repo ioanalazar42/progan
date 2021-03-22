@@ -15,7 +15,7 @@ from datareader import load_images
 from network import Critic4x4, Generator4x4
 from timeit import default_timer as timer
 from torch.utils import tensorboard
-from utils import sample_gradient_l2_norm
+from utils import configure_logger, sample_gradient_l2_norm
 
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('--configuration',
@@ -32,6 +32,13 @@ TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMEN
 SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}')
 SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'logs')
 
+# Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
+logger = logging.getLogger()
+configure_logger(SAVE_LOGS_DIR, EXPERIMENT_ID)
+
+if CONFIG.is_enabled('dry_run'):
+    logger.info('Dry run! Just for testing, data is not saved')
+
 if CONFIG.missing_fields():
     raise Exception(f'Configuration {args.configuration} misses the following fields: {CONFIG.missing_fields()}\n')
 
@@ -42,25 +49,9 @@ if CONFIG.is_disabled('dry_run'):
     os.makedirs(SAVE_MODEL_DIR)
     WRITER = tensorboard.SummaryWriter(TENSORBOARD_DIR) # Set up TensorBoard.
 
-if not SAVE_LOGS_DIR:
-    os.makedirs(SAVE_LOGS_DIR)
- 
-# Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
-file_handler = logging.FileHandler(f'{SAVE_LOGS_DIR}/{EXPERIMENT_ID}.log', 'w', 'utf-8')
-file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s]: %(message)s',"%Y-%m-%d %H:%M:%S")) # Make the printing of file logs pretty and informative.
-
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
-logger.addHandler(file_handler) # Make logger print to file.
-logger.addHandler(logging.StreamHandler(sys.stdout)) # Also make logger print to console.
-
 # Print what configuration is being used and let user know whether or not data is saved for this experiment.
 logger.info(f'Using configuration "{args.configuration}".\n')
 logger.info(pprint.pformat(CONFIG.to_dictionary(), indent=4))
-
-if CONFIG.is_enabled('dry_run'):
-    logger.info('Dry run! Just for testing, data is not saved')
 
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 # Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
