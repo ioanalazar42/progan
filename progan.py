@@ -1,7 +1,9 @@
 import argparse
+import logging
 import numpy as np
 import os
 import pprint
+import sys
 import time
 import torch
 import torch.nn.functional as F
@@ -28,21 +30,34 @@ CONFIG = get_configuration(args.configuration) # Get the current configuration.
 SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}')
 TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}')
 SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}')
+SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'logs')
 
 if CONFIG.missing_fields():
     raise Exception(f'Configuration {args.configuration} misses the following fields: {CONFIG.missing_fields()}\n')
 
-print(f'Using configuration "{args.configuration}".\n')
-pprint.PrettyPrinter(indent=4).pprint(CONFIG.to_dictionary())
+logger.info(f'Using configuration "{args.configuration}".\n')
+logger.info(pprint.pformat(CONFIG.to_dictionary(), indent=4))
 
 # Create directories for images, tensorboard results and saved models.
 if CONFIG.is_disabled('dry_run'):
     os.makedirs(SAVE_IMAGE_DIR)
     os.makedirs(TENSORBOARD_DIR)
     os.makedirs(SAVE_MODEL_DIR)
+    os.makedirs(SAVE_LOGS_DIR)
     WRITER = tensorboard.SummaryWriter(TENSORBOARD_DIR) # Set up TensorBoard.
 else:
-    print('\nDry run! Just for testing, data is not saved')
+    logger.info('\nDry run! Just for testing, data is not saved')
+
+
+# Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
+file_handler = logging.FileHandler(f'{SAVE_LOGS_DIR}/{EXPERIMENT_ID}.log', 'w', 'utf-8')
+file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s]: %(message)s',"%Y-%m-%d %H:%M:%S")) # Make the printing of file logs pretty and informative.
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+logger.addHandler(file_handler) # Make logger print to file.
+logger.addHandler(logging.StreamHandler(sys.stdout)) # Also make logger print to console.
 
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 # Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
@@ -131,8 +146,8 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         global_epoch_count += 1
         time_elapsed = timer() - start_time
 
-        # Print some statistics in the terminal.
-        print(f'Network size: {network_size} - Epoch: {epoch} - '
+        # Log some statistics in the terminal.
+        logger.info(f'Network size: {network_size} - Epoch: {epoch} - '
             f'Critic Loss: {average_critic_loss:.6f} - '
             f'Generator Loss: {average_generator_loss:.6f} - '
             f'Average C(x): {average_critic_real_performance:.6f} - '
@@ -146,11 +161,11 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             and (global_epoch_count % CONFIG.get('model_save_frequency') == 0 or epoch == CONFIG.get('num_epochs_per_network')[network_size] - 1)):
             
             save_critic_model_path = f'{SAVE_MODEL_DIR}/critic-{network_size}x{network_size}-{epoch}.pth'
-            print(f'\nSaving critic model as "{save_critic_model_path}"...')
+            logger.info(f'\nSaving critic model as "{save_critic_model_path}"...')
             torch.save(critic_model.state_dict(), save_critic_model_path)
             
             save_generator_model_path = f'{SAVE_MODEL_DIR}/generator-{network_size}x{network_size}-{epoch}.pth'
-            print(f'Saving generator model as "{save_generator_model_path}"...\n')
+            logger.info(f'Saving generator model as "{save_generator_model_path}"...\n')
             torch.save(generator_model.state_dict(), save_generator_model_path)
 
         # Save images.
@@ -169,4 +184,4 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             WRITER.add_scalar('training/distinguishability-score', distinguishability_score, global_epoch_count)
             WRITER.add_scalar('training/epoch-duration', time_elapsed, global_epoch_count)
 
-print('Finished training!')
+logger.info('Finished training!')
