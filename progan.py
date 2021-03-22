@@ -35,19 +35,13 @@ SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'logs')
 if CONFIG.missing_fields():
     raise Exception(f'Configuration {args.configuration} misses the following fields: {CONFIG.missing_fields()}\n')
 
-logger.info(f'Using configuration "{args.configuration}".\n')
-logger.info(pprint.pformat(CONFIG.to_dictionary(), indent=4))
-
-# Create directories for images, tensorboard results and saved models.
+# Create directories for images, tensorboard results, saved models and experiment logs.
 if CONFIG.is_disabled('dry_run'):
     os.makedirs(SAVE_IMAGE_DIR)
     os.makedirs(TENSORBOARD_DIR)
     os.makedirs(SAVE_MODEL_DIR)
     os.makedirs(SAVE_LOGS_DIR)
     WRITER = tensorboard.SummaryWriter(TENSORBOARD_DIR) # Set up TensorBoard.
-else:
-    logger.info('\nDry run! Just for testing, data is not saved')
-
 
 # Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
 file_handler = logging.FileHandler(f'{SAVE_LOGS_DIR}/{EXPERIMENT_ID}.log', 'w', 'utf-8')
@@ -58,6 +52,13 @@ logger.setLevel(logging.DEBUG)
 
 logger.addHandler(file_handler) # Make logger print to file.
 logger.addHandler(logging.StreamHandler(sys.stdout)) # Also make logger print to console.
+
+# Print what configuration is being used and let user know whether or not data is saved for this experiment.
+logger.info(f'Using configuration "{args.configuration}".\n')
+logger.info(pprint.pformat(CONFIG.to_dictionary(), indent=4))
+
+if CONFIG.is_enabled('dry_run'):
+    logger.info('\nDry run! Just for testing, data is not saved')
 
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 # Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
