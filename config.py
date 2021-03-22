@@ -5,7 +5,7 @@ Configurations can be specified as a command line argument.
 '''
 
 _REQUIRED_FIELDS = [
-    'data_dir',
+    'data_dir_per_network_size',
     'model_save_frequency',
     'training_set_size',
     'gradient_penalty_factor',
