@@ -1,5 +1,6 @@
 '''Contains utilities for reading and processing images.'''
 
+import logging
 import numpy as np
 import os
 
@@ -26,15 +27,17 @@ def _load_image(path):
 
 
 def load_images(dir_path, training_set_size, image_size):
+    logger = logging.getLogger()
+
     file_names = os.listdir(dir_path)[:training_set_size]
     images = np.empty([len(file_names), 3, image_size, image_size], dtype=np.float32)
-    print(f'\nLoading {len(file_names)} images from {dir_path}...\n')
+    logger.info(f'\nLoading {len(file_names)} images from {dir_path}...\n')
 
     for i, file_name in enumerate(file_names):
         image_path = os.path.join(dir_path, file_name)
         images[i] = _load_image(image_path)
 
         if i > 0 and i % 10000 == 0:
-            print(f'Loaded {i}/{len(images)} images so far')
+            logger.info(f'Loaded {i}/{len(images)} images so far')
 
     return images

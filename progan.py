@@ -25,7 +25,7 @@ args = PARSER.parse_args()
 
 # Define constants.
 EXPERIMENT_ID = int(time.time()) # Used to create new directories to save results of individual experiments.
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+DEVICE = torch.device('cpu' if torch.cuda.is_available() else 'cpu')
 CONFIG = get_configuration(args.configuration) # Get the current configuration.
 SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}')
 TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}')
@@ -40,9 +40,11 @@ if CONFIG.is_disabled('dry_run'):
     os.makedirs(SAVE_IMAGE_DIR)
     os.makedirs(TENSORBOARD_DIR)
     os.makedirs(SAVE_MODEL_DIR)
-    os.makedirs(SAVE_LOGS_DIR)
     WRITER = tensorboard.SummaryWriter(TENSORBOARD_DIR) # Set up TensorBoard.
 
+if not SAVE_LOGS_DIR:
+    os.makedirs(SAVE_LOGS_DIR)
+ 
 # Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
 file_handler = logging.FileHandler(f'{SAVE_LOGS_DIR}/{EXPERIMENT_ID}.log', 'w', 'utf-8')
 file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s]: %(message)s',"%Y-%m-%d %H:%M:%S")) # Make the printing of file logs pretty and informative.
@@ -58,7 +60,7 @@ logger.info(f'Using configuration "{args.configuration}".\n')
 logger.info(pprint.pformat(CONFIG.to_dictionary(), indent=4))
 
 if CONFIG.is_enabled('dry_run'):
-    logger.info('\nDry run! Just for testing, data is not saved')
+    logger.info('Dry run! Just for testing, data is not saved')
 
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 # Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
@@ -129,7 +131,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 average_critic_loss += loss.item() / CONFIG.get('num_critic_training_steps') / CONFIG.get('epoch_length_per_network')[network_size]
                 average_critic_real_performance += real_scores.mean().item() / CONFIG.get('num_critic_training_steps') / CONFIG.get('epoch_length_per_network')[network_size]
                 average_critic_generated_performance += generated_scores.mean().item() / CONFIG.get('num_critic_training_steps') / CONFIG.get('epoch_length_per_network')[network_size]
-                distinguishability_score = average_critic_real_performance - average_critic_generated_performance # Measure how different generated images are from real images. This should trend towards 0 as fake images become indistinguishable from real ones to the critic.
+                discernability_score = average_critic_real_performance - average_critic_generated_performance # Measure how different generated images are from real images. This should trend towards 0 as fake images become indistinguishable from real ones to the critic.
 
             # Train the generator:
             generator_model.zero_grad()
@@ -148,12 +150,12 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         time_elapsed = timer() - start_time
 
         # Log some statistics in the terminal.
-        logger.info(f'Network size: {network_size} - Epoch: {epoch} - '
-            f'Critic Loss: {average_critic_loss:.6f} - '
-            f'Generator Loss: {average_generator_loss:.6f} - '
-            f'Average C(x): {average_critic_real_performance:.6f} - '
-            f'Average C(G(x)): {average_critic_generated_performance:.6f} - '
-            f'C(x) - C(G(x)) ("distinguishability" score): {distinguishability_score:.6f}'
+        logger.info(f'{network_size}x{network_size} | {epoch:3} | '
+            f'Loss(C): {average_critic_loss:.6f} | '
+            f'Loss(G): {average_generator_loss:.6f} | '
+            f'Avg C(x): {average_critic_real_performance:.6f} | '
+            f'Avg C(G(x)): {average_critic_generated_performance:.6f} | '
+            f'Discernability score: {discernability_score:.6f} | '
             f'Time: {time_elapsed:.3f}s')
 
         # Save the model parameters at a specified interval.
@@ -182,7 +184,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             WRITER.add_scalar('training/critic/loss', average_critic_loss, global_epoch_count)
             WRITER.add_scalar('training/critic/real-performance', average_critic_real_performance, global_epoch_count)
             WRITER.add_scalar('training/critic/generated-performance', average_critic_generated_performance, global_epoch_count)
-            WRITER.add_scalar('training/distinguishability-score', distinguishability_score, global_epoch_count)
+            WRITER.add_scalar('training/discernability-score', discernability_score, global_epoch_count)
             WRITER.add_scalar('training/epoch-duration', time_elapsed, global_epoch_count)
 
 logger.info('Finished training!')
