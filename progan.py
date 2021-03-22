@@ -28,7 +28,6 @@ CONFIG = get_configuration(args.configuration) # Get the current configuration.
 SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}')
 TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}')
 SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}')
-WRITER = tensorboard.SummaryWriter(TENSORBOARD_DIR) # Set up TensorBoard.
 
 if CONFIG.missing_fields():
     raise Exception(f'Configuration {args.configuration} misses the following fields: {CONFIG.missing_fields()}\n')
@@ -41,6 +40,7 @@ if CONFIG.is_disabled('dry_run'):
     os.makedirs(SAVE_IMAGE_DIR)
     os.makedirs(TENSORBOARD_DIR)
     os.makedirs(SAVE_MODEL_DIR)
+    WRITER = tensorboard.SummaryWriter(TENSORBOARD_DIR) # Set up TensorBoard.
 else:
     print('\nDry run! Just for testing, data is not saved')
 
@@ -70,7 +70,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     critic_optimizer = optim.Adam(critic_model.parameters(), lr=CONFIG.get('learning_rate'), betas=(0, 0.99))
     generator_optimizer = optim.Adam(generator_model.parameters(), lr=CONFIG.get('learning_rate'), betas=(0, 0.99))
 
-    for epoch in range(CONFIG.get('num_epochs_per_network')[network_size])
+    for epoch in range(CONFIG.get('num_epochs_per_network')[network_size]):
         start_time = timer()
         
         # Variables for recording statistics.
