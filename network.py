@@ -202,7 +202,7 @@ class Critic32x32(nn.Module):
         critic64x64_model.residual_rgb_conv = self.rgb_conv
 
         critic64x64_model.conv3_layernorm = self.conv3_layernorm
-        critic64x64_model.conv3 = self.conv4
+        critic64x64_model.conv3 = self.conv3
 
         critic64x64_model.conv4_layernorm = self.conv4_layernorm
         critic64x64_model.conv4 = self.conv4
