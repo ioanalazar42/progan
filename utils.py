@@ -1,4 +1,5 @@
 import logging
+import sys
 import torch
 
 from torch import autograd
@@ -33,11 +34,13 @@ def sample_gradient_l2_norm(critic_model, real_images, generated_images, device)
     l2_norm = torch.sqrt(torch.sum(gradients ** 2, dim=1))
     return torch.mean((l2_norm - 1) ** 2)
 
-def configure_logger(logs_dir, exp_id):
+def configure_logger(logs_dir, exp_id, dry_run):
     if not logs_dir:
         os.makedirs(logs_dir)
-
-    file_handler = logging.FileHandler(f'{logs_dir}/{exp_id}.log', 'w', 'utf-8')
+    
+    log_file = f'{exp_id}-dry_run.log' if dry_run else f'{exp_id}.log'
+    
+    file_handler = logging.FileHandler(f'{logs_dir}/{log_file}', 'w', 'utf-8')
     file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s]: %(message)s',"%Y-%m-%d %H:%M:%S")) # Make the printing of file logs pretty and informative.
 
     logger = logging.getLogger()
