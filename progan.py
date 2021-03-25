@@ -3,7 +3,6 @@ import logging
 import numpy as np
 import os
 import pprint
-import sys
 import time
 import torch
 import torch.nn.functional as F
@@ -34,7 +33,7 @@ SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'logs')
 
 # Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
 logger = logging.getLogger()
-configure_logger(SAVE_LOGS_DIR, EXPERIMENT_ID)
+configure_logger(SAVE_LOGS_DIR, EXPERIMENT_ID, CONFIG.is_enabled('dry_run'))
 
 if CONFIG.is_enabled('dry_run'):
     logger.info('Dry run! Just for testing, data is not saved')
@@ -50,7 +49,7 @@ if CONFIG.is_disabled('dry_run'):
     WRITER = tensorboard.SummaryWriter(TENSORBOARD_DIR) # Set up TensorBoard.
 
 # Print what configuration is being used and let user know whether or not data is saved for this experiment.
-logger.info(f'Using configuration "{args.configuration}".\n')
+logger.info(f'Using configuration "{args.configuration}".')
 logger.info(pprint.pformat(CONFIG.to_dictionary(), indent=4))
 
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
@@ -72,6 +71,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         critic_model = Critic4x4().to(DEVICE)
         generator_model = Generator4x4().to(DEVICE)
     else:
+        logger.info(f'BEGIN TRANSITIONING TO {network_size}x{network_size}.')
         critic_model = critic_model.evolve(DEVICE)
         generator_model = generator_model.evolve(DEVICE)
     
