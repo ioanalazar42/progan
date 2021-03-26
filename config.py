@@ -28,7 +28,7 @@ _CONFIGURATIONS = {
         },
         'dry_run': False,
         'model_save_frequency': 4,
-        'training_set_size': 99999999,
+        'training_set_size': 10000,
         'gradient_penalty_factor': 10,
         'learning_rate': 1e-4,
         'mini_batch_size': 256,
@@ -74,27 +74,27 @@ _CONFIGURATIONS = {
         'mini_batch_size': 2,
         'num_critic_training_steps': 2,
         'num_epochs_per_network': {
-            4: 10,
-            8: 20,
-            16: 20,
-            32: 20,
-            64: 20,
-            128: 20
-        },
-        'transition_length_per_network': {
-            8: 2,
-            16: 2,
-            32: 2,
-            64: 2,
-            128: 2
-        },
-        'epoch_length_per_network': {
             4: 4,
             8: 4,
             16: 4,
             32: 4,
             64: 4,
             128: 4
+        },
+        'transition_length_per_network': {
+            8: 4,
+            16: 4,
+            32: 4,
+            64: 4,
+            128: 4
+        },
+        'epoch_length_per_network': {
+            4: 2,
+            8: 2,
+            16: 2,
+            32: 2,
+            64: 2,
+            128: 2
         }
     },
     'test_dry_run': {
@@ -114,27 +114,27 @@ _CONFIGURATIONS = {
         'mini_batch_size': 2,
         'num_critic_training_steps': 2,
         'num_epochs_per_network': {
-            4: 10,
-            8: 20,
-            16: 20,
-            32: 20,
-            64: 20,
-            128: 20
-        },
-        'transition_length_per_network': {
-            8: 2,
-            16: 2,
-            32: 2,
-            64: 2,
-            128: 2
-        },
-        'epoch_length_per_network': {
             4: 4,
             8: 4,
             16: 4,
             32: 4,
             64: 4,
             128: 4
+        },
+        'transition_length_per_network': {
+            8: 4,
+            16: 4,
+            32: 4,
+            64: 4,
+            128: 4
+        },
+        'epoch_length_per_network': {
+            4: 2,
+            8: 2,
+            16: 2,
+            32: 2,
+            64: 2,
+            128: 2
         }
     }
 }

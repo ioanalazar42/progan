@@ -26,14 +26,14 @@ args = PARSER.parse_args()
 EXPERIMENT_ID = int(time.time()) # Used to create new directories to save results of individual experiments.
 DEVICE = torch.device('cpu' if torch.cuda.is_available() else 'cpu')
 CONFIG = get_configuration(args.configuration) # Get the current configuration.
-SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}')
-TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}')
-SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}')
+SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}-{args.configuration}')
+TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}-{args.configuration}')
+SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}-{args.configuration}')
 SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'logs')
 
 # Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
 logger = logging.getLogger()
-configure_logger(SAVE_LOGS_DIR, EXPERIMENT_ID, CONFIG.is_enabled('dry_run'))
+configure_logger(SAVE_LOGS_DIR, EXPERIMENT_ID, args.configuration)
 
 if CONFIG.is_enabled('dry_run'):
     logger.info('Dry run! Just for testing, data is not saved')
