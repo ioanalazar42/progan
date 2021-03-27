@@ -21,8 +21,8 @@ def _center_crop_image(image):
 
     return image[y : crop_size, x : crop_size]
 
-def _resize_image(image, width, height):
-    return transform.resize(image, [height, width, 3], anti_aliasing=True, mode='constant')
+def _resize_image(image, width, height, resize_mode):
+    return transform.resize(image, [height, width, 3], order=resize_mode, anti_aliasing=True, mode='constant')
 
 def _load_image(path):
     image = io.imread(path)
@@ -59,14 +59,19 @@ for i, file_name in enumerate(file_names):
     if i > 0 and i % 10000 == 0:
         print(f'Loaded {i}/{len(file_names)} images so far')
 
+
 # Resize all images and save them in separate directories.
-for image_size in [4, 8, 16, 32, 64, 128]:
+for image_size in [128, 64, 32, 16, 8, 4]:
     save_image_dir = f'{TRAINING_IMAGES_DIR_PATH}/{image_size}x{image_size}'
 
     os.makedirs(save_image_dir)
 
     for file_id, image in enumerate(images):
-        resized_image = _resize_image(image, image_size, image_size)
+        resized_image = (_resize_image(image, image_size, image_size, resize_mode=1) if image_size==128 else # Use bi-linear interpolation if resizing from original to 128x128.
+                        _resize_image(image, image_size, image_size, resize_mode=0))      # Use nearest-neighbor interpolation for every other image size.
         io.imsave(f'{save_image_dir}/{file_id:06d}.jpg', img_as_ubyte(resized_image))
+        
+        # Overwrite original images with resized in order to progressively shrink images (128x128 -> 64x64 -> 32x32 etc).
+        images[file_id] = resized_image
 
     print(f'\nLoaded {len(images)} images of size {image_size}x{image_size} in directory {save_image_dir}.\n')
