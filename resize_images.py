@@ -21,8 +21,8 @@ def _center_crop_image(image):
 
     return image[y : crop_size, x : crop_size]
 
-def _resize_image(image, width, height, resize_mode):
-    return transform.resize(image, [height, width, 3], order=resize_mode, anti_aliasing=True, mode='constant')
+def _resize_image(image, width, height, mode):
+    return transform.resize(image, [height, width, 3], order=mode, anti_aliasing=True, mode='constant')
 
 def _load_image(path):
     image = io.imread(path)
@@ -35,6 +35,10 @@ def _load_image(path):
     image = _center_crop_image(image)
 
     return image
+
+# Define constants for different modes of image resizing.
+BILINEAR = 1
+NEAREST_NEIGHBOR = 0
 
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('--training_set_size', default=99999999, type=int)
@@ -67,8 +71,8 @@ for image_size in [128, 64, 32, 16, 8, 4]:
     os.makedirs(save_image_dir)
 
     for file_id, image in enumerate(images):
-        resized_image = (_resize_image(image, image_size, image_size, resize_mode=1) if image_size==128 else # Use bi-linear interpolation if resizing from original to 128x128.
-                        _resize_image(image, image_size, image_size, resize_mode=0))      # Use nearest-neighbor interpolation for every other image size.
+        resized_image = (_resize_image(image, image_size, image_size, mode=BILINEAR) if image_size==128
+                         else _resize_image(image, image_size, image_size, mode=NEAREST_NEIGHBOR))  
         io.imsave(f'{save_image_dir}/{file_id:06d}.jpg', img_as_ubyte(resized_image))
         
         # Overwrite original images with resized in order to progressively shrink images (128x128 -> 64x64 -> 32x32 etc).
