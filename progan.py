@@ -67,6 +67,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     # Load and preprocess images:
     images = load_images(CONFIG.get('data_dir_per_network_size')[network_size], CONFIG.get('training_set_size'), image_size=network_size)
 
+    print()
     if network_size == 4:
         critic_model = Critic4x4().to(DEVICE)
         generator_model = Generator4x4().to(DEVICE)
@@ -78,10 +79,13 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     # Set up Adam optimizers for both models.
     critic_optimizer = optim.Adam(critic_model.parameters(), lr=CONFIG.get('learning_rate'), betas=(0, 0.99))
     generator_optimizer = optim.Adam(generator_model.parameters(), lr=CONFIG.get('learning_rate'), betas=(0, 0.99))
-
+    
+    # When the transition to a larger network is finished, log this.
+    logged_transition_finished = False
+    
     for epoch in range(CONFIG.get('num_epochs_per_network')[network_size]):
         start_time = timer()
-        
+
         # Variables for recording statistics.
         average_critic_real_performance = 0.0  # C(x) - The critic wants this to be as big as possible for real images.
         average_critic_generated_performance = 0.0  # C(G(x)) - The critic wants this to be as small as possible for generated images.
@@ -91,9 +95,14 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         # Train: For every epoch, perform the number of mini-batch updates that corresonds to the current network size.
         for _ in range(CONFIG.get('epoch_length_per_network')[network_size]):
 
-            if network_size > 4 and critic_model.residual_influence > 0:
-                critic_model.residual_influence -= 1 / CONFIG.get('transition_length_per_network')[network_size]
-                generator_model.residual_influence -= 1 / CONFIG.get('transition_length_per_network')[network_size]
+            if network_size > 4:
+                if critic_model.residual_influence > 0:
+                    critic_model.residual_influence -= 1 / CONFIG.get('transition_length_per_network')[network_size]
+                    generator_model.residual_influence -= 1 / CONFIG.get('transition_length_per_network')[network_size]
+            
+                elif not logged_transition_finished: # Residual influence zero, so finished transitioning.
+                    logger.info(f'FINISHED TRANSITIONING TO {network_size}x{network_size}.')
+                    logged_transition_finished = True
 
             # Train the critic:
             for _ in range(CONFIG.get('num_critic_training_steps')):
@@ -146,7 +155,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             f'Loss(G): {average_generator_loss:.6f} | '
             f'Avg C(x): {average_critic_real_performance:.6f} | '
             f'Avg C(G(x)): {average_critic_generated_performance:.6f} | '
-            f'Discernability score: {discernability_score:.6f} | '
+            f'C(x) - C(G(x)): {discernability_score:.6f} | '
             f'Time: {time_elapsed:.3f}s')
 
         # Save the model parameters at a specified interval.

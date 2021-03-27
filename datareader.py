@@ -31,6 +31,7 @@ def load_images(dir_path, training_set_size, image_size):
 
     file_names = os.listdir(dir_path)[:training_set_size]
     images = np.empty([len(file_names), 3, image_size, image_size], dtype=np.float32)
+    print()
     logger.info(f'Loading {len(file_names)} images of size {image_size}x{image_size} from {dir_path}...')
 
     for i, file_name in enumerate(file_names):
