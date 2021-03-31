@@ -363,12 +363,14 @@ class Generator4x4(nn.Module):
         self.fc = nn.Linear(512, 512 * 4 * 4)
 
         # Input is 512x4x4, output is 3x4x4
+        self.rgb_conv_bn = nn.BatchNorm2d(512)
         self.rgb_conv = nn.Conv2d(512, 3, kernel_size=(1, 1))
+
 
     def forward(self, x):
         x = F.relu(self.fc(x)).view(-1, 512, 4, 4)
 
-        x = torch.tanh(self.rgb_conv(x))
+        x = torch.tanh(self.rgb_conv(self.rgb_conv_bn(x)))
         return x
 
     def evolve(self, device):
