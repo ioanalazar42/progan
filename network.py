@@ -333,12 +333,12 @@ class Critic4x4(nn.Module):
     def __init__(self):
         super(Critic4x4, self).__init__()
 
-        # Input is 3x4x4, output is 512x4x4
-        self.rgb_conv = nn.Conv2d(3, 512, kernel_size=(1, 1))
+        # Input is 3x4x4, output is 256x4x4
+        self.rgb_conv = nn.Conv2d(3, 256, kernel_size=(1, 1))
 
-        # Input is 512x4x4, output is 512x4x4
-        self.extra_conv_layernorm = nn.LayerNorm([512, 4, 4])
-        self.extra_conv = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=1)
+        # Input is 256x4x4, output is 512x4x4
+        self.extra_conv_layernorm = nn.LayerNorm([256, 4, 4])
+        self.extra_conv = nn.Conv2d(256, 512, kernel_size=(3, 3), stride=1,  padding=1)
 
         # Input is 512*4*4, output is 1
         self.fc_layernorm = nn.LayerNorm([512 * 4 * 4])
@@ -347,6 +347,7 @@ class Critic4x4(nn.Module):
     def forward(self, x):
         x = F.relu(self.rgb_conv(x))
         x = F.relu(self.extra_conv(self.extra_conv_layernorm(x)))
+        #x = F.relu(self.extra_conv(x))
         x = self.fc(self.fc_layernorm(x.view(-1, 512 * 4 * 4)))
 
         return x
@@ -367,19 +368,20 @@ class Generator4x4(nn.Module):
         # Input is a latent space vector of size 512, output is 512*4*4
         self.fc = nn.Linear(512, 512 * 4 * 4)
 
-        # Input is 512x4x4, output is 512x4x4 
+        # Input is 512x4x4, output is 256x4x4 
         self.extra_conv_bn = nn.BatchNorm2d(512)
-        self.extra_conv = nn.Conv2d(512, 512, kernel_size=(3, 3), padding=1)
+        self.extra_conv = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 512x4x4, output is 3x4x4
-        self.rgb_conv_bn = nn.BatchNorm2d(512)
-        self.rgb_conv = nn.Conv2d(512, 3, kernel_size=(1, 1))
+        # Input is 256x4x4, output is 3x4x4
+        self.rgb_conv_bn = nn.BatchNorm2d(256)
+        self.rgb_conv = nn.Conv2d(256, 3, kernel_size=(1, 1))
 
 
     def forward(self, x):
         x = F.relu(self.fc(x)).view(-1, 512, 4, 4)
 
-        x = F.relu(self.extra_con(self.extra_conv_bn(x)))
+        x = F.relu(self.extra_conv(self.extra_conv_bn(x)))
+        #x = F.relu(self.extra_conv(x))
 
         x = torch.tanh(self.rgb_conv(self.rgb_conv_bn(x)))
         return x

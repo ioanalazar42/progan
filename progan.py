@@ -24,7 +24,8 @@ args = PARSER.parse_args()
 
 # Define constants.
 EXPERIMENT_ID = int(time.time()) # Used to create new directories to save results of individual experiments.
-DEVICE = torch.device('cpu' if torch.cuda.is_available() else 'cpu')
+
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 CONFIG = get_configuration(args.configuration) # Get the current configuration.
 SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}-{args.configuration}')
 TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}-{args.configuration}')
