@@ -28,7 +28,7 @@ _CONFIGURATIONS = {
         },
         'dry_run': False,
         'model_save_frequency': 4,
-        'training_set_size': 10000,
+        'training_set_size': 99999999,
         'gradient_penalty_factor': 10,
         'learning_rate': 1e-4,
         'mini_batch_size': 256,
@@ -50,6 +50,46 @@ _CONFIGURATIONS = {
         },
         'epoch_length_per_network': {
             4: 2500,
+            8: 2500,
+            16: 2500,
+            32: 2500,
+            64: 2500,
+            128: 2500
+        }
+    },
+    '4x4_generation': {
+        'data_dir_per_network_size': {
+            4: '/home/datasets/celeba-aligned/4x4',
+            8: '/home/datasets/celeba-aligned/8x8',
+            16: '/home/datasets/celeba-aligned/16x16',
+            32: '/home/datasets/celeba-aligned/32x32',
+            64: '/home/datasets/celeba-aligned/64x64',
+            128: '/home/datasets/celeba-aligned/128x128'
+        },
+        'dry_run': False,
+        'model_save_frequency': 4,
+        'training_set_size': 10000,
+        'gradient_penalty_factor': 10,
+        'learning_rate': 1e-4,
+        'mini_batch_size': 256,
+        'num_critic_training_steps': 2,
+        'num_epochs_per_network': {
+            4: 10,
+            8: 20,
+            16: 20,
+            32: 30,
+            64: 40,
+            128: 80
+        },
+        'transition_length_per_network': {
+            8: 25000,
+            16: 25000,
+            32: 37500,
+            64: 50000,
+            128: 100000
+        },
+        'epoch_length_per_network': {
+            4: 1000,
             8: 2500,
             16: 2500,
             32: 2500,
