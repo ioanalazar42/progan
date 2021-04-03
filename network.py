@@ -24,11 +24,16 @@ def _append_minibatch_std(x):
 
        Example:
          input of shape [128, 8192] -> output of shape [128, 8193].'''
+
     x_std = x.std()
     x_std = x_std.tile(x.shape[0], 1)
 
     return torch.cat((x, x_std), dim=1)
 
+def _clip_range(x, min_clip=-1, max_clip=1):
+    '''Brings values of x into range [min_clip, max_clip].'''
+
+    return torch.clamp(x, min_clip, max_clip)
 
 class Critic128x128(nn.Module):
 
@@ -428,7 +433,7 @@ class Generator4x4(nn.Module):
         x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
         x = _upsample(x)
         x = F.relu(self.conv1(x))
-        x = torch.tanh(self.rgb_conv(x))
+        x = _clip_range(self.rgb_conv(x))
         
         return x
 
@@ -476,10 +481,10 @@ class Generator8x8(nn.Module):
         x = _upsample(x)
         x = F.relu(self.conv2(self.conv2_bn(x)))
 
-        x = torch.tanh(self.rgb_conv(x))
+        x = _clip_range(self.rgb_conv(x))
 
         if self.residual_influence > 0:
-            x_residual = torch.tanh(self.residual_rgb_conv(x_residual))
+            x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
@@ -538,10 +543,10 @@ class Generator16x16(nn.Module):
         x = _upsample(x)
         x = F.relu(self.conv2(self.conv2_bn(x)))
         
-        x = torch.tanh(self.rgb_conv(x))
+        x = _clip_range(self.rgb_conv(x))
 
         if self.residual_influence > 0:
-            x_residual = torch.tanh(self.residual_rgb_conv(x_residual))
+            x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)  # 3x8x8 -> 3x16x16
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
@@ -608,10 +613,10 @@ class Generator32x32(nn.Module):
         x = _upsample(x)
         x = F.relu(self.conv3(self.conv3_bn(x)))
         
-        x = torch.tanh(self.rgb_conv(x))
+        x = _clip_range(self.rgb_conv(x))
 
         if self.residual_influence > 0:
-            x_residual = torch.tanh(self.residual_rgb_conv(x_residual))
+            x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)  # 3x16x16 -> 3x32x32
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
@@ -687,10 +692,10 @@ class Generator64x64(nn.Module):
         x = _upsample(x)
         x = F.relu(self.conv4(self.conv4_bn(x)))
        
-        x = torch.tanh(self.rgb_conv(x))
+        x = _clip_range(self.rgb_conv(x))
 
         if self.residual_influence > 0:
-            x_residual = torch.tanh(self.residual_rgb_conv(x_residual))
+            x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)  # 3x32x32 -> 3x64x64
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
@@ -771,10 +776,10 @@ class Generator128x128(nn.Module):
         x_residual = x
 
         x = _upsample(x)
-        x = torch.tanh(self.conv5(self.conv5_bn(x)))
+        x = _clip_range(self.conv5(self.conv5_bn(x)))
         
         if self.residual_influence > 0:
-            x_residual = torch.tanh(self.residual_rgb_conv(x_residual))
+            x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)  # 3x64x64 -> 3x128x128
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
