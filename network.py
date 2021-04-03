@@ -288,9 +288,12 @@ class Critic8x8(nn.Module):
         self.conv5 = nn.Conv2d(256, 512, kernel_size=(4, 4), stride=2, padding=1)
 
         # (
-        # Input 3x4x4, output is 512x4x4
-        self.residual_rgb_conv = nn.Conv2d(3, 512, kernel_size=(1, 1))
+        # Input 3x4x4, output is 16x4x4
+        self.residual_rgb_conv = nn.Conv2d(3, 16, kernel_size=(1, 1))
         self.residual_influence = 1
+
+        # Input is 16x4x4, output is 512x4x4
+        self.extra_conv = nn.Conv2d(16, 512, kernel_size=(3, 3), stride=1,  padding=1)
         # )
 
         # Input is 512*4*4, output is 1
@@ -304,8 +307,9 @@ class Critic8x8(nn.Module):
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
 
         if self.residual_influence > 0:
-            x_residual = _downsample(x_residual)  # 3x8x8 -> 3x4x4
-            x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x_residual = _downsample(x_residual)                    # 3x8x8 -> 3x4x4
+            x_residual = F.relu(self.residual_rgb_conv(x_residual)) # 3x4x4 -> 16x4x4
+            x_residual = F.relu(self.extra_conv(x_residual))        # 16x4x4 -> 512x4x4
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
@@ -321,6 +325,8 @@ class Critic8x8(nn.Module):
 
         critic16x16_model.conv5_layernorm = self.conv5_layernorm
         critic16x16_model.conv5 = self.conv5
+
+        critic16x16_model.extra_conv = self.extra_conv
 
         critic16x16_model.fc_layernorm = self.fc_layernorm
         critic16x16_model.fc = self.fc
@@ -354,6 +360,7 @@ class Critic4x4(nn.Module):
         critic8x8_model = Critic8x8().to(device)
 
         critic8x8_model.residual_rgb_conv = self.rgb_conv
+        critic8x8_model.extra_conv = self.extra_conv
         critic8x8_model.fc_layernorm = self.fc_layernorm
         critic8x8_model.fc = self.fc
 
