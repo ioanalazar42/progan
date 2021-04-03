@@ -19,6 +19,17 @@ def _downsample(x):
 
     return F.interpolate(x, scale_factor=0.5, mode='bilinear', recompute_scale_factor=False)
 
+def _append_minibatch_std(x):
+    '''Calculates a 2D tensor's standard deviation and appends it as a new column (the standard deviation is duplicated on each row).
+
+       Example:
+         input of shape [128, 8192] -> output of shape [128, 8193].'''
+    x_std = x.std()
+    x_std = x_std.tile(x.shape[0], 1)
+
+    return torch.cat((x, x_std), dim=1)
+
+
 class Critic128x128(nn.Module):
 
     def __init__(self):
@@ -74,7 +85,8 @@ class Critic128x128(nn.Module):
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
-        x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
+        x = _append_minibatch_std(x.view(-1, 1024 * 2 * 2))
+        x = self.fc(self.fc_layernorm(x))
 
         return x
 
@@ -133,6 +145,7 @@ class Critic64x64(nn.Module):
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = _append_minibatch_std(x.view(-1, 1024 * 2 * 2))
         x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
 
         return x
@@ -210,6 +223,7 @@ class Critic32x32(nn.Module):
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = _append_minibatch_std(x.view(-1, 1024 * 2 * 2))
         x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
 
         return x
@@ -281,6 +295,7 @@ class Critic16x16(nn.Module):
 
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = _append_minibatch_std(x.view(-1, 1024 * 2 * 2))
         x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
 
         return x
@@ -344,6 +359,7 @@ class Critic8x8(nn.Module):
             self.residual_rgb_conv = None
 
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = _append_minibatch_std(x.view(-1, 1024 * 2 * 2))
         x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
 
         return x
