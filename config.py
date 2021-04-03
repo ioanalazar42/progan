@@ -89,7 +89,7 @@ _CONFIGURATIONS = {
             128: 100000
         },
         'epoch_length_per_network': {
-            4: 1000,
+            4: 1500,
             8: 2500,
             16: 2500,
             32: 2500,
