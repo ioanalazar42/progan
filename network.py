@@ -24,34 +24,38 @@ class Critic128x128(nn.Module):
     def __init__(self):
         super(Critic128x128, self).__init__()
 
-        # Input is 3x128x128, output is 32x64x64
+        # Input is 3x128x128, output is 32x64x64.
         self.conv1 = nn.Conv2d(3, 32, kernel_size=(4, 4), stride=2, padding=1)
 
         # (
-        # Input 3x64x64, output is 32x64x64
+        # Input 3x64x64, output is 32x64x64.
         self.residual_rgb_conv = nn.Conv2d(3, 32, kernel_size=(1, 1))
         self.residual_influence = 1
         # )
 
-        # Input is 32x64x64, output is 64x32x32
+        # Input is 32x64x64, output is 64x32x32.
         self.conv2_layernorm = nn.LayerNorm([32, 64, 64])
         self.conv2 = nn.Conv2d(32, 64, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 64x32x32, output is 128x16x16
+        # Input is 64x32x32, output is 128x16x16.
         self.conv3_layernorm = nn.LayerNorm([64, 32, 32])
         self.conv3 = nn.Conv2d(64, 128, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 128x16x16, output is 256x8x8
+        # Input is 128x16x16, output is 256x8x8.
         self.conv4_layernorm = nn.LayerNorm([128, 16, 16])
         self.conv4 = nn.Conv2d(128, 256, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 256x8x8, output is 512x4x4
+        # Input is 256x8x8, output is 512x4x4.
         self.conv5_layernorm = nn.LayerNorm([256, 8, 8])
         self.conv5 = nn.Conv2d(256, 512, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 512*4*4, output is 1
-        self.fc_layernorm = nn.LayerNorm([512 * 4 * 4])
-        self.fc = nn.Linear(512 * 4 * 4, 1)
+        # Input is 512x4x4, output is 1024x2x2.
+        self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
+
+        # Input is 1024*2*2, output is 1.
+        self.fc_layernorm = nn.LayerNorm([1024 * 2 * 2])
+        self.fc = nn.Linear(1024 * 2 * 2, 1)
 
     def forward(self, x):
         x_residual = x
@@ -59,7 +63,7 @@ class Critic128x128(nn.Module):
         x = F.relu(self.conv1(x))
 
         if self.residual_influence > 0:
-            x_residual = _downsample(x_residual)  # 3x128x128 -> 3x64x64
+            x_residual = _downsample(x_residual)
             x_residual = F.relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
@@ -69,7 +73,8 @@ class Critic128x128(nn.Module):
         x = F.relu(self.conv3(self.conv3_layernorm(x)))
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
-        x = self.fc(self.fc_layernorm(x.view(-1, 512 * 4 * 4)))
+        x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
 
         return x
 
