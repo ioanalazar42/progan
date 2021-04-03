@@ -400,7 +400,7 @@ class Generator4x4(nn.Module):
     def __init__(self):
         super(Generator4x4, self).__init__()
         # Input is a latent space vector of size 512, output is 1024*2*2.
-        self.fc = nn.Linear(512, 1024 * 4 * 4)
+        self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
         self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
@@ -429,30 +429,37 @@ class Generator8x8(nn.Module):
 
     def __init__(self):
         super(Generator8x8, self).__init__()
-        # Input is a latent space vector of size 512, output is 512*4*4
-        self.fc = nn.Linear(512, 512 * 4 * 4)
+        # Input is a latent space vector of size 512, output is 1024*2*2.
+        self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # (
-        # Input is 512x4x4, output is 3x4x4
+        # Input is 512x4x4, output is 3x4x4.
         self.residual_rgb_conv = nn.Conv2d(512, 3, kernel_size=(1, 1))
         self.residual_influence = 1
-        # upsample
         # )
 
-        # Input is 512x8x8, output is 256x8x8
-        self.conv1_bn = nn.BatchNorm2d(512)
-        self.conv1 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 1024x4x4, output is 512x4x4.
+        self.conv1_bn = nn.BatchNorm2d(1024)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 256x8x8, output is 3x8x8
+        # Input is 512x8x8, output is 256x8x8.
+        self.conv2_bn = nn.BatchNorm2d(512)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+
+        # Input is 256x8x8, output is 3x8x8,
         self.rgb_conv = nn.Conv2d(256, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 512, 4, 4)
-
-        x_residual = x
+        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
         x = F.relu(self.conv1(self.conv1_bn(x)))
+        
+        x_residual = x
+
+        x = _upsample(x)
+        x = F.relu(self.conv2(self.conv2_bn(x)))
+
         x = torch.tanh(self.rgb_conv(x))
 
         if self.residual_influence > 0:
@@ -471,6 +478,9 @@ class Generator8x8(nn.Module):
 
         generator16x16_model.conv1_bn = self.conv1_bn
         generator16x16_model.conv1 = self.conv1
+
+        generator16x16_model.conv2_bn = self.conv2_bn
+        generator16x16_model.conv2 = self.conv2
 
         generator16x16_model.residual_rgb_conv = self.rgb_conv
 
