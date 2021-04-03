@@ -399,22 +399,20 @@ class Generator4x4(nn.Module):
 
     def __init__(self):
         super(Generator4x4, self).__init__()
-        # Input is a latent space vector of size 512, output is 512*4*4
-        self.fc = nn.Linear(512, 512 * 4 * 4)
+        # Input is a latent space vector of size 512, output is 1024*2*2.
+        self.fc = nn.Linear(512, 1024 * 4 * 4)
 
-        # Input is 512x4x4, output is 32x4x4 
-        self.extra_conv = nn.Conv2d(512, 32, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 1024x4x4, output is 512x4x4.
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 32x4x4, output is 3x4x4
-        self.rgb_conv_bn = nn.BatchNorm2d(32)
-        self.rgb_conv = nn.Conv2d(32, 3, kernel_size=(1, 1))
-
-
+        # Input is 512x4x4, output is 3x4x4.
+        self.rgb_conv = nn.Conv2d(512, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 512, 4, 4)
-        x = F.relu(self.extra_conv(x))
-        x = torch.tanh(self.rgb_conv(self.rgb_conv_bn(x)))
+        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
+        x = _upsample(x)
+        x = F.relu(self.conv1(x))
+        x = torch.tanh(self.rgb_conv(x))
         
         return x
 
@@ -422,6 +420,7 @@ class Generator4x4(nn.Module):
         generator8x8_model = Generator8x8().to(device)
 
         generator8x8_model.fc = self.fc
+        generator8x8_model.fc = self.conv1
         generator8x8_model.residual_rgb_conv = self.rgb_conv
 
         return generator8x8_model
@@ -458,7 +457,7 @@ class Generator8x8(nn.Module):
 
         if self.residual_influence > 0:
             x_residual = torch.tanh(self.residual_rgb_conv(x_residual))
-            x_residual = _upsample(x_residual)  # 3x4x4 -> 3x8x8
+            x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
