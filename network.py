@@ -81,7 +81,7 @@ class Critic64x64(nn.Module):
         # Input 3x64x64, output is 32x64x64
         self.rgb_conv = nn.Conv2d(3, 32, kernel_size=(1, 1))
 
-        # Input is 32x64x64, output is 64x64x64
+        # Input is 32x64x64, output is 64x32x32
         self.conv2_layernorm = nn.LayerNorm([32, 64, 64])
         self.conv2 = nn.Conv2d(32, 64, kernel_size=(4, 4), stride=2, padding=1)
 
@@ -155,7 +155,7 @@ class Critic32x32(nn.Module):
         # Input 3x32x32, output is 64x32x32
         self.rgb_conv = nn.Conv2d(3, 64, kernel_size=(1, 1))
 
-        # Input is 64x32x32, output is 128x32x32
+        # Input is 64x32x32, output is 128x16x16
         self.conv3_layernorm = nn.LayerNorm([64, 32, 32])
         self.conv3 = nn.Conv2d(64, 128, kernel_size=(4, 4), stride=2, padding=1)
         
@@ -248,8 +248,8 @@ class Critic16x16(nn.Module):
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
 
         if self.residual_influence > 0:
-            x_residual = _downsample(x_residual)  # 3x16x16 -> 3x8x8
-            x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x_residual = _downsample(x_residual)                        # 3x16x16 -> 3x8x8
+            x_residual = F.relu(self.residual_rgb_conv(x_residual))     # 3x8x8 -> 256x8x8
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
@@ -339,20 +339,19 @@ class Critic4x4(nn.Module):
     def __init__(self):
         super(Critic4x4, self).__init__()
 
-        # Input is 3x4x4, output is 16x4x4
-        self.rgb_conv = nn.Conv2d(3, 16, kernel_size=(1, 1))
+        # Input is 3x4x4, output is 512x4x4
+        self.rgb_conv = nn.Conv2d(3, 512, kernel_size=(1, 1))
 
-        # Input is 16x4x4, output is 512x4x4
-        self.extra_conv = nn.Conv2d(16, 512, kernel_size=(3, 3), stride=1,  padding=1)
+        # Input is 512x4x4, output is 1024x2x2.
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3), stride=2, padding=1)
 
-        # Input is 512*4*4, output is 1
-        self.fc_layernorm = nn.LayerNorm([512 * 4 * 4])
-        self.fc = nn.Linear(512 * 4 * 4, 1)
+        # Input is 1024*4*4, output is 1
+        self.fc = nn.Linear(1024 * 4 * 4, 1)
 
     def forward(self, x):
         x = F.relu(self.rgb_conv(x))
-        x = F.relu(self.extra_conv(x))
-        x = self.fc(self.fc_layernorm(x.view(-1, 512 * 4 * 4)))
+        x = F.relu(self.conv6(x))
+        x = self.fc(x.view(-1, 1024 * 4 * 4))
 
         return x
 
@@ -360,8 +359,7 @@ class Critic4x4(nn.Module):
         critic8x8_model = Critic8x8().to(device)
 
         critic8x8_model.residual_rgb_conv = self.rgb_conv
-        critic8x8_model.extra_conv = self.extra_conv
-        critic8x8_model.fc_layernorm = self.fc_layernorm
+        critic8x8_model.conv6 = self.conv6
         critic8x8_model.fc = self.fc
 
         return critic8x8_model
