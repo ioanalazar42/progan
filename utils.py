@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 import torch
 
@@ -35,7 +36,7 @@ def sample_gradient_l2_norm(critic_model, real_images, generated_images, device)
     return torch.mean((l2_norm - 1) ** 2)
 
 def configure_logger(logs_dir, exp_id, config_id):
-    if not logs_dir:
+    if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
     
     log_file = f'{exp_id}-{config_id}.log'
