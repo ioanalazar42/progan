@@ -20,13 +20,14 @@ def _downsample(x):
     return F.interpolate(x, scale_factor=0.5, mode='bilinear', recompute_scale_factor=False)
 
 def _append_constant(x, const):
-    '''Appends a constant to input tensor x by creating another tensor that's filled with that constant.
-
+    '''Appends constant as a new column (the constant is duplicated on each row).
+       
        Example:
-         input of shape [256, 49152] -> output of shape [257, 49152].'''
+         input of shape [128, 8192] -> output of shape [128, 8193].'''
 
-    const = const.tile(1, x.shape[1])
-    return torch.cat((x, const), dim=0)
+    const = const.tile(x.shape[0], 1)
+    return torch.cat((x, const), dim=1)
+
 
 def _clip_range(x, min_clip=-1, max_clip=1):
     '''Brings values of x into range [min_clip, max_clip].'''
@@ -67,14 +68,12 @@ class Critic128x128(nn.Module):
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 1024*2*2, output is 1.
-        self.fc_layernorm = nn.LayerNorm([1024 * 2 * 2])
-        self.fc = nn.Linear(1024 * 2 * 2, 1)
+        # Input is 4097, output is 1.
+        self.fc_layernorm = nn.LayerNorm([4097])
+        self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
-        # Append activation map that contains the std to the minibatch of images.
-        # (N, 3, 128, 128) -> (N+1, 3, 128, 128)
-        x = _append_constant(x.view(-1, 3*128*128), x.std()).view(-1, 3, 128, 128)
+        std = x.std()
 
         x_residual = x
 
@@ -92,7 +91,8 @@ class Critic128x128(nn.Module):
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
-        x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
+        x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
+        x = self.fc(self.fc_layernorm(x))
 
         return x
 
@@ -130,14 +130,12 @@ class Critic64x64(nn.Module):
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 1024*2*2, output is 1.
-        self.fc_layernorm = nn.LayerNorm([1024 * 2 * 2])
-        self.fc = nn.Linear(1024 * 2 * 2, 1)
+        # Input is 4097, output is 1.
+        self.fc_layernorm = nn.LayerNorm([4097])
+        self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
-        # Append activation map that contains the std to the minibatch of images.
-        # (N, 3, 64, 64) -> (N+1, 3, 64, 64)
-        x = _append_constant(x.view(-1, 3*64*64), x.std()).view(-1, 3, 64, 64)
+        std = x.std()
 
         x_residual = x
 
@@ -155,7 +153,8 @@ class Critic64x64(nn.Module):
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
-        x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
+        x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
+        x = self.fc(self.fc_layernorm(x))
 
         return x
 
@@ -212,14 +211,12 @@ class Critic32x32(nn.Module):
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 1024*2*2, output is 1.
-        self.fc_layernorm = nn.LayerNorm([1024 * 2 * 2])
-        self.fc = nn.Linear(1024 * 2 * 2, 1)
+        # Input is 4097, output is 1.
+        self.fc_layernorm = nn.LayerNorm([4097])
+        self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
-        # Append activation map that contains the std to the minibatch of images.
-        # (N, 3, 32, 32) -> (N+1, 3, 32, 32)
-        x = _append_constant(x.view(-1, 3*32*32), x.std()).view(-1, 3, 32, 32)
+        std = x.std()
 
         x_residual = x
 
@@ -236,7 +233,8 @@ class Critic32x32(nn.Module):
         x = F.relu(self.conv4(self.conv4_layernorm(x)))
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
-        x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
+        x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
+        x = self.fc(self.fc_layernorm(x))
 
         return x
 
@@ -288,14 +286,12 @@ class Critic16x16(nn.Module):
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 1024*2*2, output is 1.
-        self.fc_layernorm = nn.LayerNorm([1024 * 2 * 2])
-        self.fc = nn.Linear(1024 * 2 * 2, 1)
+        # Input is 4097, output is 1.
+        self.fc_layernorm = nn.LayerNorm([4097])
+        self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
-        # Append activation map that contains the std to the minibatch of images.
-        # (N, 3, 16, 16) -> (N+1, 3, 16, 16)
-        x = _append_constant(x.view(-1, 3*16*16), x.std()).view(-1, 3, 16, 16)
+        std = x.std()
 
         x_residual = x
 
@@ -311,7 +307,8 @@ class Critic16x16(nn.Module):
 
         x = F.relu(self.conv5(self.conv5_layernorm(x)))
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
-        x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
+        x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
+        x = self.fc(self.fc_layernorm(x))
 
         return x
 
@@ -356,14 +353,12 @@ class Critic8x8(nn.Module):
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 1024*2*2, output is 1.
-        self.fc_layernorm = nn.LayerNorm([1024 * 2 * 2])
-        self.fc = nn.Linear(1024 * 2 * 2, 1)
+        # Input is 4097, output is 1.
+        self.fc_layernorm = nn.LayerNorm([4097])
+        self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
-        # Append activation map that contains the std to the minibatch of images.
-        # (N, 3, 8, 8) -> (N+1, 3, 8, 8)
-        x = _append_constant(x.view(-1, 3*8*8), x.std()).view(-1, 3, 8, 8)
+        std = x.std()
 
         x_residual = x
 
@@ -378,7 +373,8 @@ class Critic8x8(nn.Module):
             self.residual_rgb_conv = None
 
         x = F.relu(self.conv6(self.conv6_layernorm(x)))
-        x = self.fc(self.fc_layernorm(x.view(-1, 1024 * 2 * 2)))
+        x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
+        x = self.fc(self.fc_layernorm(x))
 
         return x
 
@@ -410,17 +406,16 @@ class Critic4x4(nn.Module):
         # Input is 512x4x4, output is 1024x2x2.
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
 
-        # Input is 1024*2*2, output is 1.
-        self.fc = nn.Linear(1024 * 2 * 2, 1)
+        # Input is 4097, output is 1.
+        self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
-        # Append activation map that contains the std to the minibatch of images.
-        # (N, 3, 4, 4) -> (N+1, 3, 4, 4)
-        x = _append_constant(x.view(-1, 3*4*4), x.std()).view(-1, 3, 4, 4)
+        std = x.std()
 
         x = F.relu(self.rgb_conv(x))
         x = F.relu(self.conv6(x))
-        x = self.fc(x.view(-1, 1024 * 2 * 2))
+        x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
+        x = self.fc(x)
 
         return x
 
