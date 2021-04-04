@@ -170,8 +170,8 @@ class Critic64x64(nn.Module):
         critic128x128_model.conv5_layernorm = self.conv5_layernorm
         critic128x128_model.conv5 = self.conv5
 
-        critic64x64_model.conv6_layernorm = self.conv6_layernorm
-        critic64x64_model.conv6 = self.conv6
+        critic128x128_model.conv6_layernorm = self.conv6_layernorm
+        critic128x128_model.conv6 = self.conv6
 
         critic128x128_model.fc_layernorm = self.fc_layernorm
         critic128x128_model.fc = self.fc
@@ -698,7 +698,7 @@ class Generator64x64(nn.Module):
         self.rgb_conv = nn.Conv2d(32, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 512, 4, 4)
+        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
         x = F.relu(self.conv1(self.conv1_bn(x)))
@@ -790,7 +790,7 @@ class Generator128x128(nn.Module):
         self.conv6 = nn.Conv2d(32, 3, kernel_size=(3, 3), stride=1, padding=1)
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 512, 4, 4)
+        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
         x = F.relu(self.conv1(self.conv1_bn(x)))
@@ -820,4 +820,3 @@ class Generator128x128(nn.Module):
             self.residual_rgb_conv = None
 
         return x
-
