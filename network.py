@@ -511,43 +511,49 @@ class Generator16x16(nn.Module):
 
     def __init__(self):
         super(Generator16x16, self).__init__()
-        # Input is a latent space vector of size 512, output is 512*4*4
-        self.fc = nn.Linear(512, 512 * 4 * 4)
+        # Input is a latent space vector of size 512, output is 1024*2*2.
+        self.fc = nn.Linear(512, 1024 * 2 * 2)
 
-        # Input is 512x8x8, output is 256x8x8
-        self.conv1_bn = nn.BatchNorm2d(512)
-        self.conv1 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 1024x4x4, output is 512x4x4.
+        self.conv1_bn = nn.BatchNorm2d(1024)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
+
+        # Input is 512x8x8, output is 256x8x8.
+        self.conv2_bn = nn.BatchNorm2d(512)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
 
         # (
-        # Input is 256x8x8, output is 3x8x8
+        # Input is 256x8x8, output is 3x8x8.
         self.residual_rgb_conv = nn.Conv2d(256, 3, kernel_size=(1, 1))
         self.residual_influence = 1
-        # upsample
         # )
 
-        # Input is 256x16x16, output is 128x16x16
-        self.conv2_bn = nn.BatchNorm2d(256)
-        self.conv2 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 256x16x16, output is 128x16x16.
+        self.conv3_bn = nn.BatchNorm2d(256)
+        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 128x16x16, output is 3x16x16
+        # Input is 128x16x16, output is 3x16x16.
         self.rgb_conv = nn.Conv2d(128, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 512, 4, 4)
+        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
         x = F.relu(self.conv1(self.conv1_bn(x)))
 
-        x_residual = x
-
         x = _upsample(x)
         x = F.relu(self.conv2(self.conv2_bn(x)))
-        
+      
+        x_residual = x
+                
+        x = _upsample(x)
+        x = F.relu(self.conv3(self.conv3_bn(x)))
+
         x = _clip_range(self.rgb_conv(x))
 
         if self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
-            x_residual = _upsample(x_residual)  # 3x8x8 -> 3x16x16
+            x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
@@ -565,6 +571,9 @@ class Generator16x16(nn.Module):
         generator32x32_model.conv2_bn = self.conv2_bn
         generator32x32_model.conv2 = self.conv2
 
+        generator32x32_model.conv3_bn = self.conv3_bn
+        generator32x32_model.conv3 = self.conv3
+
         generator32x32_model.residual_rgb_conv = self.rgb_conv
 
         return generator32x32_model
@@ -574,50 +583,56 @@ class Generator32x32(nn.Module):
 
     def __init__(self):
         super(Generator32x32, self).__init__()
-        # Input is a latent space vector of size 512, output is 512*4*4
-        self.fc = nn.Linear(512, 512 * 4 * 4)
+        # Input is a latent space vector of size 512, output is 1024*2*2.
+        self.fc = nn.Linear(512, 1024 * 2 * 2)
 
-        # Input is 512x8x8, output is 256x8x8
-        self.conv1_bn = nn.BatchNorm2d(512)
-        self.conv1 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 1024x4x4, output is 512x4x4.
+        self.conv1_bn = nn.BatchNorm2d(1024)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 256x16x16, output is 128x16x16
-        self.conv2_bn = nn.BatchNorm2d(256)
-        self.conv2 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 512x8x8, output is 256x8x8.
+        self.conv2_bn = nn.BatchNorm2d(512)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+
+        # Input is 256x16x16, output is 128x16x16.
+        self.conv3_bn = nn.BatchNorm2d(256)
+        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
 
         # (
-        # Input is 128x16x16, output is 3x16x16
+        # Input is 128x16x16, output is 3x16x16.
         self.residual_rgb_conv = nn.Conv2d(128, 3, kernel_size=(1, 1))
         self.residual_influence = 1
-        # upsample
         # )
 
-        # Input is 128x32x32, output is 64x32x32
-        self.conv3_bn = nn.BatchNorm2d(128)
-        self.conv3 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 128x32x32, output is 64x32x32.
+        self.conv4_bn = nn.BatchNorm2d(128)
+        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 64x32x32, output is 3x32x32
+        # Input is 64x32x32, output is 3x32x32.
         self.rgb_conv = nn.Conv2d(64, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 512, 4, 4)
+        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
         x = F.relu(self.conv1(self.conv1_bn(x)))
 
         x = _upsample(x)
         x = F.relu(self.conv2(self.conv2_bn(x)))
-
-        x_residual = x
-
+                
         x = _upsample(x)
         x = F.relu(self.conv3(self.conv3_bn(x)))
-        
+
+        x_residual = x
+    
+        x = _upsample(x)
+        x = F.relu(self.conv4(self.conv4_bn(x)))
+
         x = _clip_range(self.rgb_conv(x))
 
         if self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
-            x_residual = _upsample(x_residual)  # 3x16x16 -> 3x32x32
+            x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
@@ -638,6 +653,9 @@ class Generator32x32(nn.Module):
         generator64x64_model.conv3_bn = self.conv3_bn
         generator64x64_model.conv3 = self.conv3
 
+        generator64x64_model.conv4_bn = self.conv4_bn
+        generator64x64_model.conv4 = self.conv4
+
         generator64x64_model.residual_rgb_conv = self.rgb_conv
 
         return generator64x64_model
@@ -646,33 +664,36 @@ class Generator64x64(nn.Module):
 
     def __init__(self):
         super(Generator64x64, self).__init__()
-        # Input is a latent space vector of size 512, output is 512*4*4
-        self.fc = nn.Linear(512, 512 * 4 * 4)
+        # Input is a latent space vector of size 512, output is 1024*2*2.
+        self.fc = nn.Linear(512, 1024 * 2 * 2)
 
-        # Input is 512x8x8, output is 256x8x8
-        self.conv1_bn = nn.BatchNorm2d(512)
-        self.conv1 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 1024x4x4, output is 512x4x4.
+        self.conv1_bn = nn.BatchNorm2d(1024)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 256x16x16, output is 128x16x16
-        self.conv2_bn = nn.BatchNorm2d(256)
-        self.conv2 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 512x8x8, output is 256x8x8.
+        self.conv2_bn = nn.BatchNorm2d(512)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 128x32x32, output is 64x32x32
-        self.conv3_bn = nn.BatchNorm2d(128)
-        self.conv3 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 256x16x16, output is 128x16x16.
+        self.conv3_bn = nn.BatchNorm2d(256)
+        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
+
+        # Input is 128x32x32, output is 64x32x32.
+        self.conv4_bn = nn.BatchNorm2d(128)
+        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
 
         # (
-        # Input is 64x32x32, output is 3x32x32
+        # Input is 64x32x32, output is 3x32x32.
         self.residual_rgb_conv = nn.Conv2d(64, 3, kernel_size=(1, 1))
         self.residual_influence = 1
-        # upsample
         # )
 
-        # Input is 64x64x64, output is 32x64x64
-        self.conv4_bn = nn.BatchNorm2d(64)
-        self.conv4 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 64x64x64, output is 32x64x64.
+        self.conv5_bn = nn.BatchNorm2d(64)
+        self.conv5 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 32x64x64, output is 3x64x64
+        # Input is 32x64x64, output is 3x64x64.
         self.rgb_conv = nn.Conv2d(32, 3, kernel_size=(1, 1))
 
     def forward(self, x):
@@ -687,16 +708,19 @@ class Generator64x64(nn.Module):
         x = _upsample(x)
         x = F.relu(self.conv3(self.conv3_bn(x)))
 
+        x = _upsample(x)
+        x = F.relu(self.conv4(self.conv4_bn(x)))
+        
         x_residual = x
 
         x = _upsample(x)
-        x = F.relu(self.conv4(self.conv4_bn(x)))
+        x = F.relu(self.conv5(self.conv5_bn(x)))
        
         x = _clip_range(self.rgb_conv(x))
 
         if self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
-            x_residual = _upsample(x_residual)  # 3x32x32 -> 3x64x64
+            x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
@@ -720,6 +744,9 @@ class Generator64x64(nn.Module):
         generator128x128_model.conv4_bn = self.conv4_bn
         generator128x128_model.conv4 = self.conv4
 
+        generator128x128_model.conv5_bn = self.conv5_bn
+        generator128x128_model.conv5 = self.conv4
+
         generator128x128_model.residual_rgb_conv = self.rgb_conv
 
         return generator128x128_model
@@ -728,35 +755,38 @@ class Generator128x128(nn.Module):
 
     def __init__(self):
         super(Generator128x128, self).__init__()
-        # Input is a latent space vector of size 512, output is 512*4*4
-        self.fc = nn.Linear(512, 512 * 4 * 4)
+        # Input is a latent space vector of size 512, output is 1024*2*2.
+        self.fc = nn.Linear(512, 1024 * 2 * 2)
 
-        # Input is 512x8x8, output is 256x8x8
-        self.conv1_bn = nn.BatchNorm2d(512)
-        self.conv1 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 1024x4x4, output is 512x4x4.
+        self.conv1_bn = nn.BatchNorm2d(1024)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 256x16x16, output is 128x16x16
-        self.conv2_bn = nn.BatchNorm2d(256)
-        self.conv2 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 512x8x8, output is 256x8x8.
+        self.conv2_bn = nn.BatchNorm2d(512)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 128x32x32, output is 64x32x32
-        self.conv3_bn = nn.BatchNorm2d(128)
-        self.conv3 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 256x16x16, output is 128x16x16.
+        self.conv3_bn = nn.BatchNorm2d(256)
+        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
 
-        # Input is 64x64x64, output is 32x64x64
-        self.conv4_bn = nn.BatchNorm2d(64)
-        self.conv4 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 128x32x32, output is 64x32x32.
+        self.conv4_bn = nn.BatchNorm2d(128)
+        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
+
+        # Input is 64x64x64, output is 32x64x64.
+        self.conv5_bn = nn.BatchNorm2d(64)
+        self.conv5 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=1, padding=1)
 
         # (
-        # Input is 32x64x64, output is 3x64x64
+        # Input is 32x64x64, output is 3x64x64.
         self.residual_rgb_conv = nn.Conv2d(32, 3, kernel_size=(1, 1))
         self.residual_influence = 1
-        # upsample
         # )
 
-        # Input is 32x128x128, output is 3x128x128
-        self.conv5_bn = nn.BatchNorm2d(32)
-        self.conv5 = nn.Conv2d(32, 3, kernel_size=(3, 3), stride=1, padding=1)
+        # Input is 32x128x128, output is 3x128x128.
+        self.conv6_bn = nn.BatchNorm2d(32)
+        self.conv6 = nn.Conv2d(32, 3, kernel_size=(3, 3), stride=1, padding=1)
 
     def forward(self, x):
         x = F.relu(self.fc(x)).view(-1, 512, 4, 4)
@@ -773,14 +803,17 @@ class Generator128x128(nn.Module):
         x = _upsample(x)
         x = F.relu(self.conv4(self.conv4_bn(x)))
 
+        x = _upsample(x)
+        x = F.relu(self.conv5(self.conv5_bn(x)))
+
         x_residual = x
 
         x = _upsample(x)
-        x = _clip_range(self.conv5(self.conv5_bn(x)))
+        x = _clip_range(self.conv6(self.conv6_bn(x)))
         
         if self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
-            x_residual = _upsample(x_residual)  # 3x64x64 -> 3x128x128
+            x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
