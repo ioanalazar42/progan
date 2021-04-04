@@ -172,15 +172,18 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             logger.info(f'Saving generator model as "{save_generator_model_path}"...\n')
             torch.save(generator_model.state_dict(), save_generator_model_path)
 
-        # Save generated images and real images for comparison.
+        # Save generated images (and real images if they are required for comparison).
         if CONFIG.is_disabled('dry_run'):
+            # Check if the experiment requires the saving of real images for comparison purposes.
+            if CONFIG.is_enabled('save_real_images'):
+                with torch.no_grad:
+                    real_images = torch.tensor(images[random_indexes], device=DEVICE)
+                real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
+                torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{global_epoch_count:03d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
+            
             with torch.no_grad():
                 generated_images = generator_model(fixed_latent_space_vectors).detach()
                 random_indexes = np.random.choice(len(images), 64)
-                real_images = torch.tensor(images[random_indexes], device=DEVICE)
-            
-            real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
-            torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{global_epoch_count:03d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
 
             generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
             grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)

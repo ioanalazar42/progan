@@ -67,6 +67,7 @@ _CONFIGURATIONS = {
             128: '/home/datasets/celeba-aligned/128x128'
         },
         'dry_run': False,
+        'save_real_images': True,
         'model_save_frequency': 4,
         'training_set_size': 10000,
         'gradient_penalty_factor': 10,
