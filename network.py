@@ -453,15 +453,15 @@ class Generator8x8(nn.Module):
         # Input is a latent space vector of size 512, output is 1024*2*2.
         self.fc = nn.Linear(512, 1024 * 2 * 2)
 
+        # Input is 1024x4x4, output is 512x4x4.
+        self.conv1_bn = nn.BatchNorm2d(1024)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
+
         # (
         # Input is 512x4x4, output is 3x4x4.
         self.residual_rgb_conv = nn.Conv2d(512, 3, kernel_size=(1, 1))
         self.residual_influence = 1
         # )
-
-        # Input is 1024x4x4, output is 512x4x4.
-        self.conv1_bn = nn.BatchNorm2d(1024)
-        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
 
         # Input is 512x8x8, output is 256x8x8.
         self.conv2_bn = nn.BatchNorm2d(512)
@@ -745,7 +745,7 @@ class Generator64x64(nn.Module):
         generator128x128_model.conv4 = self.conv4
 
         generator128x128_model.conv5_bn = self.conv5_bn
-        generator128x128_model.conv5 = self.conv4
+        generator128x128_model.conv5 = self.conv5
 
         generator128x128_model.residual_rgb_conv = self.rgb_conv
 
