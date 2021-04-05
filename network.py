@@ -436,7 +436,7 @@ class Generator4x4(nn.Module):
         self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
-        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x4x4, output is 3x4x4.
         self.rgb_conv = nn.Conv2d(512, 3, kernel_size=(1, 1))
@@ -467,7 +467,7 @@ class Generator8x8(nn.Module):
 
         # Input is 1024x4x4, output is 512x4x4.
         self.conv1_bn = nn.BatchNorm2d(1024)
-        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # (
         # Input is 512x4x4, output is 3x4x4.
@@ -477,7 +477,7 @@ class Generator8x8(nn.Module):
 
         # Input is 512x8x8, output is 256x8x8.
         self.conv2_bn = nn.BatchNorm2d(512)
-        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # Input is 256x8x8, output is 3x8x8,
         self.rgb_conv = nn.Conv2d(256, 3, kernel_size=(1, 1))
@@ -528,11 +528,11 @@ class Generator16x16(nn.Module):
 
         # Input is 1024x4x4, output is 512x4x4.
         self.conv1_bn = nn.BatchNorm2d(1024)
-        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x8x8, output is 256x8x8.
         self.conv2_bn = nn.BatchNorm2d(512)
-        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # (
         # Input is 256x8x8, output is 3x8x8.
@@ -542,7 +542,7 @@ class Generator16x16(nn.Module):
 
         # Input is 256x16x16, output is 128x16x16.
         self.conv3_bn = nn.BatchNorm2d(256)
-        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), padding=1)
 
         # Input is 128x16x16, output is 3x16x16.
         self.rgb_conv = nn.Conv2d(128, 3, kernel_size=(1, 1))
@@ -600,15 +600,15 @@ class Generator32x32(nn.Module):
 
         # Input is 1024x4x4, output is 512x4x4.
         self.conv1_bn = nn.BatchNorm2d(1024)
-        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x8x8, output is 256x8x8.
         self.conv2_bn = nn.BatchNorm2d(512)
-        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # Input is 256x16x16, output is 128x16x16.
         self.conv3_bn = nn.BatchNorm2d(256)
-        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), padding=1)
 
         # (
         # Input is 128x16x16, output is 3x16x16.
@@ -618,7 +618,7 @@ class Generator32x32(nn.Module):
 
         # Input is 128x32x32, output is 64x32x32.
         self.conv4_bn = nn.BatchNorm2d(128)
-        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), padding=1)
 
         # Input is 64x32x32, output is 3x32x32.
         self.rgb_conv = nn.Conv2d(64, 3, kernel_size=(1, 1))
@@ -681,19 +681,19 @@ class Generator64x64(nn.Module):
 
         # Input is 1024x4x4, output is 512x4x4.
         self.conv1_bn = nn.BatchNorm2d(1024)
-        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x8x8, output is 256x8x8.
         self.conv2_bn = nn.BatchNorm2d(512)
-        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # Input is 256x16x16, output is 128x16x16.
         self.conv3_bn = nn.BatchNorm2d(256)
-        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), padding=1)
 
         # Input is 128x32x32, output is 64x32x32.
         self.conv4_bn = nn.BatchNorm2d(128)
-        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), padding=1)
 
         # (
         # Input is 64x32x32, output is 3x32x32.
@@ -703,7 +703,7 @@ class Generator64x64(nn.Module):
 
         # Input is 64x64x64, output is 32x64x64.
         self.conv5_bn = nn.BatchNorm2d(64)
-        self.conv5 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv5 = nn.Conv2d(64, 32, kernel_size=(3, 3), padding=1)
 
         # Input is 32x64x64, output is 3x64x64.
         self.rgb_conv = nn.Conv2d(32, 3, kernel_size=(1, 1))
@@ -772,23 +772,23 @@ class Generator128x128(nn.Module):
 
         # Input is 1024x4x4, output is 512x4x4.
         self.conv1_bn = nn.BatchNorm2d(1024)
-        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x8x8, output is 256x8x8.
         self.conv2_bn = nn.BatchNorm2d(512)
-        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # Input is 256x16x16, output is 128x16x16.
         self.conv3_bn = nn.BatchNorm2d(256)
-        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), padding=1)
 
         # Input is 128x32x32, output is 64x32x32.
         self.conv4_bn = nn.BatchNorm2d(128)
-        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), padding=1)
 
         # Input is 64x64x64, output is 32x64x64.
         self.conv5_bn = nn.BatchNorm2d(64)
-        self.conv5 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv5 = nn.Conv2d(64, 32, kernel_size=(3, 3), padding=1)
 
         # (
         # Input is 32x64x64, output is 3x64x64.
@@ -798,7 +798,7 @@ class Generator128x128(nn.Module):
 
         # Input is 32x128x128, output is 3x128x128.
         self.conv6_bn = nn.BatchNorm2d(32)
-        self.conv6 = nn.Conv2d(32, 3, kernel_size=(3, 3), stride=1, padding=1)
+        self.conv6 = nn.Conv2d(32, 3, kernel_size=(3, 3), padding=1)
 
     def forward(self, x):
         x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
