@@ -25,7 +25,7 @@ def _append_constant(x, const):
        Example:
          input of shape [128, 8192] -> output of shape [128, 8193].'''
 
-    const = const.tile(x.shape[0], 1)
+    const = const.tile(x.shape[0], 1) # Replicate constant into shape [N, 1] to allow concatenation.
     return torch.cat((x, const), dim=1)
 
 
