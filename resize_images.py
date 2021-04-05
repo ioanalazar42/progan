@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     # Resize all images and save them in separate directories.
     for image_size in [128, 64, 32, 16, 8, 4]:
-        save_image_dir = f'{TRAINING_IMAGES_DIR_PATH}/new-{image_size}x{image_size}'
+        save_image_dir = f'{TRAINING_IMAGES_DIR_PATH}/{image_size}x{image_size}'
         os.makedirs(save_image_dir)
 
         for file_id, image in enumerate(images):
