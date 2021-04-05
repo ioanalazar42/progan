@@ -34,6 +34,11 @@ def _clip_range(x, min_clip=-1, max_clip=1):
 
     return torch.clamp(x, min_clip, max_clip)
 
+def _leaky_relu(x):
+    '''Applies leaky relu activation function with slope 0.2 to input x.'''
+
+    return F.leaky_relu(x, negative_slope=0.2)
+
 class Critic128x128(nn.Module):
 
     def __init__(self):
@@ -77,20 +82,20 @@ class Critic128x128(nn.Module):
 
         x_residual = x
 
-        x = F.relu(self.conv1(x))
+        x = _leaky_relu(self.conv1(x))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
-            x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
 
-        x = F.relu(self.conv2(self.conv2_layernorm(x)))
-        x = F.relu(self.conv3(self.conv3_layernorm(x)))
-        x = F.relu(self.conv4(self.conv4_layernorm(x)))
-        x = F.relu(self.conv5(self.conv5_layernorm(x)))
-        x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv2(self.conv2_layernorm(x)))
+        x = _leaky_relu(self.conv3(self.conv3_layernorm(x)))
+        x = _leaky_relu(self.conv4(self.conv4_layernorm(x)))
+        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
+        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
         x = self.fc(self.fc_layernorm(x))
 
@@ -139,20 +144,20 @@ class Critic64x64(nn.Module):
 
         x_residual = x
 
-        x = F.relu(self.rgb_conv(x))
-        x = F.relu(self.conv2(self.conv2_layernorm(x)))
+        x = _leaky_relu(self.rgb_conv(x))
+        x = _leaky_relu(self.conv2(self.conv2_layernorm(x)))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
-            x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
 
-        x = F.relu(self.conv3(self.conv3_layernorm(x)))
-        x = F.relu(self.conv4(self.conv4_layernorm(x)))
-        x = F.relu(self.conv5(self.conv5_layernorm(x)))
-        x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv3(self.conv3_layernorm(x)))
+        x = _leaky_relu(self.conv4(self.conv4_layernorm(x)))
+        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
+        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
         x = self.fc(self.fc_layernorm(x))
 
@@ -220,19 +225,19 @@ class Critic32x32(nn.Module):
 
         x_residual = x
 
-        x = F.relu(self.rgb_conv(x))
-        x = F.relu(self.conv3(self.conv3_layernorm(x)))
+        x = _leaky_relu(self.rgb_conv(x))
+        x = _leaky_relu(self.conv3(self.conv3_layernorm(x)))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
-            x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
 
-        x = F.relu(self.conv4(self.conv4_layernorm(x)))
-        x = F.relu(self.conv5(self.conv5_layernorm(x)))
-        x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv4(self.conv4_layernorm(x)))
+        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
+        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
         x = self.fc(self.fc_layernorm(x))
 
@@ -295,18 +300,18 @@ class Critic16x16(nn.Module):
 
         x_residual = x
 
-        x = F.relu(self.rgb_conv(x))
-        x = F.relu(self.conv4(self.conv4_layernorm(x)))
+        x = _leaky_relu(self.rgb_conv(x))
+        x = _leaky_relu(self.conv4(self.conv4_layernorm(x)))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
-            x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
 
-        x = F.relu(self.conv5(self.conv5_layernorm(x)))
-        x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
+        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
         x = self.fc(self.fc_layernorm(x))
 
@@ -362,17 +367,17 @@ class Critic8x8(nn.Module):
 
         x_residual = x
 
-        x = F.relu(self.rgb_conv(x))
-        x = F.relu(self.conv5(self.conv5_layernorm(x)))
+        x = _leaky_relu(self.rgb_conv(x))
+        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
-            x_residual = F.relu(self.residual_rgb_conv(x_residual))
+            x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
         else:
             self.residual_rgb_conv = None
 
-        x = F.relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
         x = self.fc(self.fc_layernorm(x))
 
@@ -412,8 +417,8 @@ class Critic4x4(nn.Module):
     def forward(self, x):
         std = x.std()
 
-        x = F.relu(self.rgb_conv(x))
-        x = F.relu(self.conv6(x))
+        x = _leaky_relu(self.rgb_conv(x))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
         x = self.fc(x)
 
@@ -442,9 +447,9 @@ class Generator4x4(nn.Module):
         self.rgb_conv = nn.Conv2d(512, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
+        x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
         x = _upsample(x)
-        x = F.relu(self.conv1(x))
+        x = _leaky_relu(self.conv1(x))
         x = _clip_range(self.rgb_conv(x))
         
         return x
@@ -483,15 +488,15 @@ class Generator8x8(nn.Module):
         self.rgb_conv = nn.Conv2d(256, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
+        x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = F.relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
         
         x_residual = x
 
         x = _upsample(x)
-        x = F.relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
 
         x = _clip_range(self.rgb_conv(x))
 
@@ -548,18 +553,18 @@ class Generator16x16(nn.Module):
         self.rgb_conv = nn.Conv2d(128, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
+        x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = F.relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
 
         x = _upsample(x)
-        x = F.relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
       
         x_residual = x
                 
         x = _upsample(x)
-        x = F.relu(self.conv3(self.conv3_bn(x)))
+        x = _leaky_relu(self.conv3(self.conv3_bn(x)))
 
         x = _clip_range(self.rgb_conv(x))
 
@@ -624,21 +629,21 @@ class Generator32x32(nn.Module):
         self.rgb_conv = nn.Conv2d(64, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
+        x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = F.relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
 
         x = _upsample(x)
-        x = F.relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
                 
         x = _upsample(x)
-        x = F.relu(self.conv3(self.conv3_bn(x)))
+        x = _leaky_relu(self.conv3(self.conv3_bn(x)))
 
         x_residual = x
     
         x = _upsample(x)
-        x = F.relu(self.conv4(self.conv4_bn(x)))
+        x = _leaky_relu(self.conv4(self.conv4_bn(x)))
 
         x = _clip_range(self.rgb_conv(x))
 
@@ -709,24 +714,24 @@ class Generator64x64(nn.Module):
         self.rgb_conv = nn.Conv2d(32, 3, kernel_size=(1, 1))
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
+        x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = F.relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
 
         x = _upsample(x)
-        x = F.relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
 
         x = _upsample(x)
-        x = F.relu(self.conv3(self.conv3_bn(x)))
+        x = _leaky_relu(self.conv3(self.conv3_bn(x)))
 
         x = _upsample(x)
-        x = F.relu(self.conv4(self.conv4_bn(x)))
+        x = _leaky_relu(self.conv4(self.conv4_bn(x)))
         
         x_residual = x
 
         x = _upsample(x)
-        x = F.relu(self.conv5(self.conv5_bn(x)))
+        x = _leaky_relu(self.conv5(self.conv5_bn(x)))
        
         x = _clip_range(self.rgb_conv(x))
 
@@ -801,22 +806,22 @@ class Generator128x128(nn.Module):
         self.conv6 = nn.Conv2d(32, 3, kernel_size=(3, 3), padding=1)
 
     def forward(self, x):
-        x = F.relu(self.fc(x)).view(-1, 1024, 2, 2)
+        x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = F.relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
 
         x = _upsample(x)
-        x = F.relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
 
         x = _upsample(x)
-        x = F.relu(self.conv3(self.conv3_bn(x)))
+        x = _leaky_relu(self.conv3(self.conv3_bn(x)))
 
         x = _upsample(x)
-        x = F.relu(self.conv4(self.conv4_bn(x)))
+        x = _leaky_relu(self.conv4(self.conv4_bn(x)))
 
         x = _upsample(x)
-        x = F.relu(self.conv5(self.conv5_bn(x)))
+        x = _leaky_relu(self.conv5(self.conv5_bn(x)))
 
         x_residual = x
 
