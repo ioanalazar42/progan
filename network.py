@@ -458,7 +458,7 @@ class Generator4x4(nn.Module):
         generator8x8_model = Generator8x8().to(device)
 
         generator8x8_model.fc = self.fc
-        generator8x8_model.fc = self.conv1
+        generator8x8_model.conv1 = self.conv1
         generator8x8_model.residual_rgb_conv = self.rgb_conv
 
         return generator8x8_model
