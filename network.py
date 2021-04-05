@@ -66,7 +66,7 @@ class Critic128x128(nn.Module):
 
         # Input is 512x4x4, output is 1024x2x2.
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
-        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
         self.fc_layernorm = nn.LayerNorm([4097])
@@ -128,7 +128,7 @@ class Critic64x64(nn.Module):
 
         # Input is 512x4x4, output is 1024x2x2.
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
-        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
         self.fc_layernorm = nn.LayerNorm([4097])
@@ -209,7 +209,7 @@ class Critic32x32(nn.Module):
 
         # Input is 512x4x4, output is 1024x2x2.
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
-        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
         self.fc_layernorm = nn.LayerNorm([4097])
@@ -284,7 +284,7 @@ class Critic16x16(nn.Module):
 
         # Input is 512x4x4, output is 1024x2x2.
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
-        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
         self.fc_layernorm = nn.LayerNorm([4097])
@@ -351,7 +351,7 @@ class Critic8x8(nn.Module):
 
         # Input is 512x4x4, output is 1024x2x2.
         self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
-        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
         self.fc_layernorm = nn.LayerNorm([4097])
@@ -404,7 +404,7 @@ class Critic4x4(nn.Module):
         self.rgb_conv = nn.Conv2d(3, 512, kernel_size=(1, 1))
 
         # Input is 512x4x4, output is 1024x2x2.
-        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(4, 4), stride=2, padding=1)
+        self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
         self.fc = nn.Linear(4097, 1)
