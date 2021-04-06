@@ -91,7 +91,7 @@ class Critic128x128(nn.Module):
         x = _leaky_relu(self.conv5(x))
         x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(
+        x = self.fc(x)
 
         return x
 
@@ -147,7 +147,7 @@ class Critic64x64(nn.Module):
         x = _leaky_relu(self.conv5(x))
         x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(
+        x = self.fc(x)
 
         return x
 
@@ -212,7 +212,7 @@ class Critic32x32(nn.Module):
         x = _leaky_relu(self.conv5(x))
         x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(
+        x = self.fc(x)
 
         return x
 
@@ -272,7 +272,7 @@ class Critic16x16(nn.Module):
         x = _leaky_relu(self.conv5(x))
         x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(
+        x = self.fc(x)
 
         return x
 
@@ -327,7 +327,7 @@ class Critic8x8(nn.Module):
 
         x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(
+        x = self.fc(x)
 
         return x
 
