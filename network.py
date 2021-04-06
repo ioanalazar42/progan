@@ -441,6 +441,7 @@ class Generator4x4(nn.Module):
         self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
+        self.conv1_bn = nn.BatchNorm2d(1024)
         self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x4x4, output is 3x4x4.
@@ -449,7 +450,7 @@ class Generator4x4(nn.Module):
     def forward(self, x):
         x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
         x = _upsample(x)
-        x = _leaky_relu(self.conv1(x))
+        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
         x = _clip_range(self.rgb_conv(x))
         
         return x
@@ -458,6 +459,7 @@ class Generator4x4(nn.Module):
         generator8x8_model = Generator8x8().to(device)
 
         generator8x8_model.fc = self.fc
+        generator8x8_model.conv1_bn = self.conv1_bn
         generator8x8_model.conv1 = self.conv1
         generator8x8_model.residual_rgb_conv = self.rgb_conv
 
