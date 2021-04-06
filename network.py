@@ -165,6 +165,8 @@ class Critic64x64(nn.Module):
 
     def evolve(self, device):
         critic128x128_model = Critic128x128().to(device)
+        
+        critic128x128_model.residual_rgb_conv = self.rgb_conv
 
         critic128x128_model.conv2_layernorm = self.conv2_layernorm
         critic128x128_model.conv2 = self.conv2
