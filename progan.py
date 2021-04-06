@@ -71,6 +71,7 @@ random_values = random_state.standard_normal([64, 512], dtype=np.float32)
 fixed_latent_space_vectors = torch.tensor(random_values, device=DEVICE)
 
 global_epoch_count = 0
+total_training_steps = 0
 
 for network_size in [4, 8, 16, 32, 64, 128]:
     # Deallocate previous images.
@@ -106,6 +107,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
 
         # Train: For every epoch, perform the number of mini-batch updates that corresonds to the current network size.
         for _ in range(CONFIG.get('epoch_length_per_network')[network_size]):
+            total_training_steps += 1
 
             if network_size > 4:
                 if critic_model.residual_influence > 0:
@@ -156,6 +158,29 @@ for network_size in [4, 8, 16, 32, 64, 128]:
 
             # Record some statistics.
             average_generator_loss += loss.item() / CONFIG.get('epoch_length_per_network')[network_size]
+
+            # Save generated images (and real images if they are required for comparison) every 'image_save_frequency' training steps.
+            if (total_training_steps % CONFIG.get('image_save_frequency') == 0):
+                if CONFIG.is_disabled('dry_run'):
+                    
+                    # Save real images.
+                    if CONFIG.is_enabled('save_real_images'):
+                        random_indexes = np.random.choice(len(images), 64)
+                        with torch.no_grad():
+                            real_images = torch.tensor(images[random_indexes], device=DEVICE)
+                        real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
+                        torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{global_epoch_count:03d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
+                    
+                    # Save generated images.
+                    with torch.no_grad():
+                        generated_images = generator_model(fixed_latent_space_vectors).detach()
+
+                    generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
+                    grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
+                    torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{global_epoch_count:03d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
+                    
+                    # Add generated images to Tensorboard.
+                    WRITER.add_image('training/generated-images', grid_images, global_epoch_count)
      
         # Record statistics.
         global_epoch_count += 1
@@ -183,22 +208,8 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             logger.info(f'Saving generator model as "{save_generator_model_path}"...\n')
             torch.save(generator_model.state_dict(), save_generator_model_path)
 
-        # Save generated images (and real images if they are required for comparison).
+        # Save tensorboard data.
         if CONFIG.is_disabled('dry_run'):
-            # Check if the experiment requires the saving of real images for comparison purposes.
-            if CONFIG.is_enabled('save_real_images'):
-                random_indexes = np.random.choice(len(images), 64)
-                with torch.no_grad():
-                    real_images = torch.tensor(images[random_indexes], device=DEVICE)
-                real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
-                torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{global_epoch_count:03d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
-            
-            with torch.no_grad():
-                generated_images = generator_model(fixed_latent_space_vectors).detach()
-
-            generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
-            grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
-            torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{global_epoch_count:03d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
 
             WRITER.add_image('training/generated-images', grid_images, global_epoch_count)
             WRITER.add_scalar('training/generator/loss', average_generator_loss, global_epoch_count)
