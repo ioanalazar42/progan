@@ -54,27 +54,21 @@ class Critic128x128(nn.Module):
         # )
 
         # Input is 32x64x64, output is 64x32x32.
-        self.conv2_layernorm = nn.LayerNorm([32, 64, 64])
         self.conv2 = nn.Conv2d(32, 64, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 64x32x32, output is 128x16x16.
-        self.conv3_layernorm = nn.LayerNorm([64, 32, 32])
         self.conv3 = nn.Conv2d(64, 128, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 128x16x16, output is 256x8x8.
-        self.conv4_layernorm = nn.LayerNorm([128, 16, 16])
         self.conv4 = nn.Conv2d(128, 256, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 256x8x8, output is 512x4x4.
-        self.conv5_layernorm = nn.LayerNorm([256, 8, 8])
         self.conv5 = nn.Conv2d(256, 512, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 512x4x4, output is 1024x2x2.
-        self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
-        self.fc_layernorm = nn.LayerNorm([4097])
         self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
@@ -91,13 +85,13 @@ class Critic128x128(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv2(self.conv2_layernorm(x)))
-        x = _leaky_relu(self.conv3(self.conv3_layernorm(x)))
-        x = _leaky_relu(self.conv4(self.conv4_layernorm(x)))
-        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
-        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv2(x))
+        x = _leaky_relu(self.conv3(x))
+        x = _leaky_relu(self.conv4(x))
+        x = _leaky_relu(self.conv5(x))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(self.fc_layernorm(x))
+        x = self.fc(
 
         return x
 
@@ -110,7 +104,6 @@ class Critic64x64(nn.Module):
         self.rgb_conv = nn.Conv2d(3, 32, kernel_size=(1, 1))
 
         # Input is 32x64x64, output is 64x32x32.
-        self.conv2_layernorm = nn.LayerNorm([32, 64, 64])
         self.conv2 = nn.Conv2d(32, 64, kernel_size=(4, 4), stride=2, padding=1)
 
         # (
@@ -120,23 +113,18 @@ class Critic64x64(nn.Module):
         # )
 
         # Input is 64x32x32, output is 128x16x16.
-        self.conv3_layernorm = nn.LayerNorm([64, 32, 32])
         self.conv3 = nn.Conv2d(64, 128, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 128x16x16, output is 256x8x8.
-        self.conv4_layernorm = nn.LayerNorm([128, 16, 16])
         self.conv4 = nn.Conv2d(128, 256, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 256x8x8, output is 512x4x4.
-        self.conv5_layernorm = nn.LayerNorm([256, 8, 8])
         self.conv5 = nn.Conv2d(256, 512, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 512x4x4, output is 1024x2x2.
-        self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
-        self.fc_layernorm = nn.LayerNorm([4097])
         self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
@@ -145,7 +133,7 @@ class Critic64x64(nn.Module):
         x_residual = x
 
         x = _leaky_relu(self.rgb_conv(x))
-        x = _leaky_relu(self.conv2(self.conv2_layernorm(x)))
+        x = _leaky_relu(self.conv2(x))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
@@ -154,12 +142,12 @@ class Critic64x64(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv3(self.conv3_layernorm(x)))
-        x = _leaky_relu(self.conv4(self.conv4_layernorm(x)))
-        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
-        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv3(x))
+        x = _leaky_relu(self.conv4(x))
+        x = _leaky_relu(self.conv5(x))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(self.fc_layernorm(x))
+        x = self.fc(
 
         return x
 
@@ -167,23 +155,11 @@ class Critic64x64(nn.Module):
         critic128x128_model = Critic128x128().to(device)
         
         critic128x128_model.residual_rgb_conv = self.rgb_conv
-
-        critic128x128_model.conv2_layernorm = self.conv2_layernorm
         critic128x128_model.conv2 = self.conv2
-
-        critic128x128_model.conv3_layernorm = self.conv3_layernorm
         critic128x128_model.conv3 = self.conv3
-
-        critic128x128_model.conv4_layernorm = self.conv4_layernorm
         critic128x128_model.conv4 = self.conv4
-
-        critic128x128_model.conv5_layernorm = self.conv5_layernorm
         critic128x128_model.conv5 = self.conv5
-
-        critic128x128_model.conv6_layernorm = self.conv6_layernorm
         critic128x128_model.conv6 = self.conv6
-
-        critic128x128_model.fc_layernorm = self.fc_layernorm
         critic128x128_model.fc = self.fc
 
         return critic128x128_model
@@ -197,7 +173,6 @@ class Critic32x32(nn.Module):
         self.rgb_conv = nn.Conv2d(3, 64, kernel_size=(1, 1))
 
         # Input is 64x32x32, output is 128x16x16.
-        self.conv3_layernorm = nn.LayerNorm([64, 32, 32])
         self.conv3 = nn.Conv2d(64, 128, kernel_size=(4, 4), stride=2, padding=1)
         
         # (
@@ -207,19 +182,15 @@ class Critic32x32(nn.Module):
         # )
 
         # Input is 128x16x16, output is 256x8x8.
-        self.conv4_layernorm = nn.LayerNorm([128, 16, 16])
         self.conv4 = nn.Conv2d(128, 256, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 256x8x8, output is 512x4x4.
-        self.conv5_layernorm = nn.LayerNorm([256, 8, 8])
         self.conv5 = nn.Conv2d(256, 512, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 512x4x4, output is 1024x2x2.
-        self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
-        self.fc_layernorm = nn.LayerNorm([4097])
         self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
@@ -228,7 +199,7 @@ class Critic32x32(nn.Module):
         x_residual = x
 
         x = _leaky_relu(self.rgb_conv(x))
-        x = _leaky_relu(self.conv3(self.conv3_layernorm(x)))
+        x = _leaky_relu(self.conv3(x))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
@@ -237,11 +208,11 @@ class Critic32x32(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv4(self.conv4_layernorm(x)))
-        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
-        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv4(x))
+        x = _leaky_relu(self.conv5(x))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(self.fc_layernorm(x))
+        x = self.fc(
 
         return x
 
@@ -249,20 +220,10 @@ class Critic32x32(nn.Module):
         critic64x64_model = Critic64x64().to(device)
 
         critic64x64_model.residual_rgb_conv = self.rgb_conv
-
-        critic64x64_model.conv3_layernorm = self.conv3_layernorm
         critic64x64_model.conv3 = self.conv3
-
-        critic64x64_model.conv4_layernorm = self.conv4_layernorm
         critic64x64_model.conv4 = self.conv4
-
-        critic64x64_model.conv5_layernorm = self.conv5_layernorm
         critic64x64_model.conv5 = self.conv5
-
-        critic64x64_model.conv6_layernorm = self.conv6_layernorm
         critic64x64_model.conv6 = self.conv6
-
-        critic64x64_model.fc_layernorm = self.fc_layernorm
         critic64x64_model.fc = self.fc
 
         return critic64x64_model
@@ -276,7 +237,6 @@ class Critic16x16(nn.Module):
         self.rgb_conv = nn.Conv2d(3, 128, kernel_size=(1, 1))
 
         # Input is 128x16x16, output is 256x8x8.
-        self.conv4_layernorm = nn.LayerNorm([128, 16, 16])
         self.conv4 = nn.Conv2d(128, 256, kernel_size=(4, 4), stride=2, padding=1)
 
         # (
@@ -286,15 +246,12 @@ class Critic16x16(nn.Module):
         # )
 
         # Input is 256x8x8, output is 512x4x4.
-        self.conv5_layernorm = nn.LayerNorm([256, 8, 8])
         self.conv5 = nn.Conv2d(256, 512, kernel_size=(4, 4), stride=2, padding=1)
 
         # Input is 512x4x4, output is 1024x2x2.
-        self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
-        self.fc_layernorm = nn.LayerNorm([4097])
         self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
@@ -303,7 +260,7 @@ class Critic16x16(nn.Module):
         x_residual = x
 
         x = _leaky_relu(self.rgb_conv(x))
-        x = _leaky_relu(self.conv4(self.conv4_layernorm(x)))
+        x = _leaky_relu(self.conv4(x))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
@@ -312,10 +269,10 @@ class Critic16x16(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
-        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv5(x))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(self.fc_layernorm(x))
+        x = self.fc(
 
         return x
 
@@ -323,17 +280,9 @@ class Critic16x16(nn.Module):
         critic32x32_model = Critic32x32().to(device)
 
         critic32x32_model.residual_rgb_conv = self.rgb_conv
-
-        critic32x32_model.conv4_layernorm = self.conv4_layernorm
         critic32x32_model.conv4 = self.conv4
-
-        critic32x32_model.conv5_layernorm = self.conv5_layernorm
         critic32x32_model.conv5 = self.conv5
-
-        critic32x32_model.conv6_layernorm = self.conv6_layernorm
         critic32x32_model.conv6 = self.conv6
-
-        critic32x32_model.fc_layernorm = self.fc_layernorm
         critic32x32_model.fc = self.fc
 
         return critic32x32_model
@@ -347,7 +296,6 @@ class Critic8x8(nn.Module):
         self.rgb_conv = nn.Conv2d(3, 256, kernel_size=(1, 1))
 
         # Input is 256x8x8, output is 512x4x4.
-        self.conv5_layernorm = nn.LayerNorm([256, 8, 8])
         self.conv5 = nn.Conv2d(256, 512, kernel_size=(4, 4), stride=2, padding=1)
 
         # (
@@ -357,11 +305,9 @@ class Critic8x8(nn.Module):
         # )
 
         # Input is 512x4x4, output is 1024x2x2.
-        self.conv6_layernorm = nn.LayerNorm([512, 4, 4])
         self.conv6 = nn.Conv2d(512, 1024, kernel_size=(3, 3))
 
         # Input is 4097, output is 1.
-        self.fc_layernorm = nn.LayerNorm([4097])
         self.fc = nn.Linear(4097, 1)
 
     def forward(self, x):
@@ -370,7 +316,7 @@ class Critic8x8(nn.Module):
         x_residual = x
 
         x = _leaky_relu(self.rgb_conv(x))
-        x = _leaky_relu(self.conv5(self.conv5_layernorm(x)))
+        x = _leaky_relu(self.conv5(x))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
@@ -379,9 +325,9 @@ class Critic8x8(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv6(self.conv6_layernorm(x)))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(self.fc_layernorm(x))
+        x = self.fc(
 
         return x
 
@@ -389,14 +335,8 @@ class Critic8x8(nn.Module):
         critic16x16_model = Critic16x16().to(device)
 
         critic16x16_model.residual_rgb_conv = self.rgb_conv
-
-        critic16x16_model.conv5_layernorm = self.conv5_layernorm
         critic16x16_model.conv5 = self.conv5
-
-        critic16x16_model.conv6_layernorm = self.conv6_layernorm
         critic16x16_model.conv6 = self.conv6
-
-        critic16x16_model.fc_layernorm = self.fc_layernorm
         critic16x16_model.fc = self.fc
 
         return critic16x16_model
