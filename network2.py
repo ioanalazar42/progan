@@ -42,7 +42,6 @@ def _leaky_relu(x):
  def _normalization(x, epsilon=1e-8):
    return x / ((x**2).mean(dim=1, keepdim=True).sqrt() + epsilon)
 
-
 class Critic128x128(nn.Module):
 
     def __init__(self):
@@ -89,13 +88,13 @@ class Critic128x128(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv2(_normalization(x)))
-        x = _leaky_relu(self.conv3(_normalization(x)))
-        x = _leaky_relu(self.conv4(_normalization(x)))
-        x = _leaky_relu(self.conv5(_normalization(x)))
-        x = _leaky_relu(self.conv6(_normalization(x)))
+        x = _leaky_relu(self.conv2(x))
+        x = _leaky_relu(self.conv3(x))
+        x = _leaky_relu(self.conv4(x))
+        x = _leaky_relu(self.conv5(x))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(_normalization(x))
+        x = self.fc(x)
 
         return x
 
@@ -137,7 +136,7 @@ class Critic64x64(nn.Module):
         x_residual = x
 
         x = _leaky_relu(self.rgb_conv(x))
-        x = _leaky_relu(self.conv2(_normalization(x)))
+        x = _leaky_relu(self.conv2(x))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
@@ -146,12 +145,12 @@ class Critic64x64(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv3(_normalization(x)))
-        x = _leaky_relu(self.conv4(_normalization(x)))
-        x = _leaky_relu(self.conv5(_normalization(x)))
-        x = _leaky_relu(self.conv6(_normalization(x)))
+        x = _leaky_relu(self.conv3(x))
+        x = _leaky_relu(self.conv4(x))
+        x = _leaky_relu(self.conv5(x))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(_normalization(x))
+        x = self.fc(x)
 
         return x
 
@@ -203,7 +202,7 @@ class Critic32x32(nn.Module):
         x_residual = x
 
         x = _leaky_relu(self.rgb_conv(x))
-        x = _leaky_relu(self.conv3(_normalization(x)))
+        x = _leaky_relu(self.conv3(x))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
@@ -212,11 +211,11 @@ class Critic32x32(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv4(_normalization(x)))
-        x = _leaky_relu(self.conv5(_normalization(x)))
-        x = _leaky_relu(self.conv6(_normalization(x)))
+        x = _leaky_relu(self.conv4(x))
+        x = _leaky_relu(self.conv5(x))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(_normalization(x))
+        x = self.fc(x)
 
         return x
 
@@ -264,7 +263,7 @@ class Critic16x16(nn.Module):
         x_residual = x
 
         x = _leaky_relu(self.rgb_conv(x))
-        x = _leaky_relu(self.conv4(_normalization(x)))
+        x = _leaky_relu(self.conv4(x))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
@@ -273,10 +272,10 @@ class Critic16x16(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv5(_normalization(x)))
-        x = _leaky_relu(self.conv6(_normalization(x)))
+        x = _leaky_relu(self.conv5(x))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(_normalization(x))
+        x = self.fc(x)
 
         return x
 
@@ -320,7 +319,7 @@ class Critic8x8(nn.Module):
         x_residual = x
 
         x = _leaky_relu(self.rgb_conv(x))
-        x = _leaky_relu(self.conv5(_normalization(x)))
+        x = _leaky_relu(self.conv5(x))
 
         if self.residual_influence > 0:
             x_residual = _downsample(x_residual)
@@ -329,9 +328,9 @@ class Critic8x8(nn.Module):
         else:
             self.residual_rgb_conv = None
 
-        x = _leaky_relu(self.conv6(_normalization(x)))
+        x = _leaky_relu(self.conv6(x))
         x = _append_constant(x.view(-1, 4096), std) # Nx4096 -> Nx4097.
-        x = self.fc(_normalization(x))
+        x = self.fc(x)
 
         return x
 
@@ -387,7 +386,7 @@ class Generator4x4(nn.Module):
         self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
-        self.conv1_bn = nn.BatchNorm2d(1024)
+        
         self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x4x4, output is 3x4x4.
@@ -396,7 +395,7 @@ class Generator4x4(nn.Module):
     def forward(self, x):
         x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
         x = _upsample(x)
-        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(_normalization(x)))
         x = _clip_range(self.rgb_conv(x))
         
         return x
@@ -405,7 +404,6 @@ class Generator4x4(nn.Module):
         generator8x8_model = Generator8x8().to(device)
 
         generator8x8_model.fc = self.fc
-        generator8x8_model.conv1_bn = self.conv1_bn
         generator8x8_model.conv1 = self.conv1
         generator8x8_model.residual_rgb_conv = self.rgb_conv
 
@@ -419,7 +417,6 @@ class Generator8x8(nn.Module):
         self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
-        self.conv1_bn = nn.BatchNorm2d(1024)
         self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # (
@@ -429,7 +426,6 @@ class Generator8x8(nn.Module):
         # )
 
         # Input is 512x8x8, output is 256x8x8.
-        self.conv2_bn = nn.BatchNorm2d(512)
         self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # Input is 256x8x8, output is 3x8x8,
@@ -439,12 +435,12 @@ class Generator8x8(nn.Module):
         x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(_normalization(x)))
         
         x_residual = x
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(_normalization(x)))
 
         x = _clip_range(self.rgb_conv(x))
 
@@ -461,13 +457,8 @@ class Generator8x8(nn.Module):
         generator16x16_model = Generator16x16().to(device)
 
         generator16x16_model.fc = self.fc
-
-        generator16x16_model.conv1_bn = self.conv1_bn
         generator16x16_model.conv1 = self.conv1
-
-        generator16x16_model.conv2_bn = self.conv2_bn
         generator16x16_model.conv2 = self.conv2
-
         generator16x16_model.residual_rgb_conv = self.rgb_conv
 
         return generator16x16_model
@@ -480,11 +471,9 @@ class Generator16x16(nn.Module):
         self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
-        self.conv1_bn = nn.BatchNorm2d(1024)
         self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x8x8, output is 256x8x8.
-        self.conv2_bn = nn.BatchNorm2d(512)
         self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # (
@@ -494,7 +483,6 @@ class Generator16x16(nn.Module):
         # )
 
         # Input is 256x16x16, output is 128x16x16.
-        self.conv3_bn = nn.BatchNorm2d(256)
         self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), padding=1)
 
         # Input is 128x16x16, output is 3x16x16.
@@ -504,15 +492,15 @@ class Generator16x16(nn.Module):
         x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(_normalization(x)))
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(_normalization(x)))
       
         x_residual = x
                 
         x = _upsample(x)
-        x = _leaky_relu(self.conv3(self.conv3_bn(x)))
+        x = _leaky_relu(self.conv3(_normalization(x)))
 
         x = _clip_range(self.rgb_conv(x))
 
@@ -529,16 +517,9 @@ class Generator16x16(nn.Module):
         generator32x32_model = Generator32x32().to(device)
 
         generator32x32_model.fc = self.fc
-
-        generator32x32_model.conv1_bn = self.conv1_bn
         generator32x32_model.conv1 = self.conv1
-
-        generator32x32_model.conv2_bn = self.conv2_bn
         generator32x32_model.conv2 = self.conv2
-
-        generator32x32_model.conv3_bn = self.conv3_bn
         generator32x32_model.conv3 = self.conv3
-
         generator32x32_model.residual_rgb_conv = self.rgb_conv
 
         return generator32x32_model
@@ -552,15 +533,12 @@ class Generator32x32(nn.Module):
         self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
-        self.conv1_bn = nn.BatchNorm2d(1024)
         self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x8x8, output is 256x8x8.
-        self.conv2_bn = nn.BatchNorm2d(512)
         self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # Input is 256x16x16, output is 128x16x16.
-        self.conv3_bn = nn.BatchNorm2d(256)
         self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), padding=1)
 
         # (
@@ -570,7 +548,6 @@ class Generator32x32(nn.Module):
         # )
 
         # Input is 128x32x32, output is 64x32x32.
-        self.conv4_bn = nn.BatchNorm2d(128)
         self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), padding=1)
 
         # Input is 64x32x32, output is 3x32x32.
@@ -580,18 +557,18 @@ class Generator32x32(nn.Module):
         x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(_normalization(x)))
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(_normalization(x)))
                 
         x = _upsample(x)
-        x = _leaky_relu(self.conv3(self.conv3_bn(x)))
+        x = _leaky_relu(self.conv3(_normalization(x)))
 
         x_residual = x
     
         x = _upsample(x)
-        x = _leaky_relu(self.conv4(self.conv4_bn(x)))
+        x = _leaky_relu(self.conv4(_normalization(x)))
 
         x = _clip_range(self.rgb_conv(x))
 
@@ -608,19 +585,10 @@ class Generator32x32(nn.Module):
         generator64x64_model = Generator64x64().to(device)
 
         generator64x64_model.fc = self.fc
-
-        generator64x64_model.conv1_bn = self.conv1_bn
         generator64x64_model.conv1 = self.conv1
-
-        generator64x64_model.conv2_bn = self.conv2_bn
         generator64x64_model.conv2 = self.conv2
-
-        generator64x64_model.conv3_bn = self.conv3_bn
         generator64x64_model.conv3 = self.conv3
-
-        generator64x64_model.conv4_bn = self.conv4_bn
         generator64x64_model.conv4 = self.conv4
-
         generator64x64_model.residual_rgb_conv = self.rgb_conv
 
         return generator64x64_model
@@ -633,19 +601,15 @@ class Generator64x64(nn.Module):
         self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
-        self.conv1_bn = nn.BatchNorm2d(1024)
         self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x8x8, output is 256x8x8.
-        self.conv2_bn = nn.BatchNorm2d(512)
         self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # Input is 256x16x16, output is 128x16x16.
-        self.conv3_bn = nn.BatchNorm2d(256)
         self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), padding=1)
 
         # Input is 128x32x32, output is 64x32x32.
-        self.conv4_bn = nn.BatchNorm2d(128)
         self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), padding=1)
 
         # (
@@ -655,7 +619,6 @@ class Generator64x64(nn.Module):
         # )
 
         # Input is 64x64x64, output is 32x64x64.
-        self.conv5_bn = nn.BatchNorm2d(64)
         self.conv5 = nn.Conv2d(64, 32, kernel_size=(3, 3), padding=1)
 
         # Input is 32x64x64, output is 3x64x64.
@@ -665,21 +628,21 @@ class Generator64x64(nn.Module):
         x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(_normalization(x)))
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(_normalization(x)))
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv3(self.conv3_bn(x)))
+        x = _leaky_relu(self.conv3(_normalization(x)))
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv4(self.conv4_bn(x)))
+        x = _leaky_relu(self.conv4(_normalization(x)))
         
         x_residual = x
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv5(self.conv5_bn(x)))
+        x = _leaky_relu(self.conv5(_normalization(x)))
        
         x = _clip_range(self.rgb_conv(x))
 
@@ -696,22 +659,11 @@ class Generator64x64(nn.Module):
         generator128x128_model = Generator128x128().to(device)
 
         generator128x128_model.fc = self.fc
-
-        generator128x128_model.conv1_bn = self.conv1_bn
         generator128x128_model.conv1 = self.conv1
-
-        generator128x128_model.conv2_bn = self.conv2_bn
         generator128x128_model.conv2 = self.conv2
-
-        generator128x128_model.conv3_bn = self.conv3_bn
         generator128x128_model.conv3 = self.conv3
-
-        generator128x128_model.conv4_bn = self.conv4_bn
         generator128x128_model.conv4 = self.conv4
-
-        generator128x128_model.conv5_bn = self.conv5_bn
         generator128x128_model.conv5 = self.conv5
-
         generator128x128_model.residual_rgb_conv = self.rgb_conv
 
         return generator128x128_model
@@ -724,23 +676,18 @@ class Generator128x128(nn.Module):
         self.fc = nn.Linear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
-        self.conv1_bn = nn.BatchNorm2d(1024)
         self.conv1 = nn.Conv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x8x8, output is 256x8x8.
-        self.conv2_bn = nn.BatchNorm2d(512)
         self.conv2 = nn.Conv2d(512, 256, kernel_size=(3, 3), padding=1)
 
         # Input is 256x16x16, output is 128x16x16.
-        self.conv3_bn = nn.BatchNorm2d(256)
         self.conv3 = nn.Conv2d(256, 128, kernel_size=(3, 3), padding=1)
 
         # Input is 128x32x32, output is 64x32x32.
-        self.conv4_bn = nn.BatchNorm2d(128)
         self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), padding=1)
 
         # Input is 64x64x64, output is 32x64x64.
-        self.conv5_bn = nn.BatchNorm2d(64)
         self.conv5 = nn.Conv2d(64, 32, kernel_size=(3, 3), padding=1)
 
         # (
@@ -750,31 +697,30 @@ class Generator128x128(nn.Module):
         # )
 
         # Input is 32x128x128, output is 3x128x128.
-        self.conv6_bn = nn.BatchNorm2d(32)
         self.conv6 = nn.Conv2d(32, 3, kernel_size=(3, 3), padding=1)
 
     def forward(self, x):
         x = _leaky_relu(self.fc(x)).view(-1, 1024, 2, 2)
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv1(self.conv1_bn(x)))
+        x = _leaky_relu(self.conv1(_normalization(x)))
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv2(self.conv2_bn(x)))
+        x = _leaky_relu(self.conv2(_normalization(x)))
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv3(self.conv3_bn(x)))
+        x = _leaky_relu(self.conv3(_normalization(x)))
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv4(self.conv4_bn(x)))
+        x = _leaky_relu(self.conv4(_normalization(x)))
 
         x = _upsample(x)
-        x = _leaky_relu(self.conv5(self.conv5_bn(x)))
+        x = _leaky_relu(self.conv5(_normalization(x)))
 
         x_residual = x
 
         x = _upsample(x)
-        x = _clip_range(self.conv6(self.conv6_bn(x)))
+        x = _clip_range(self.conv6(_normalization(x)))
         
         if self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
