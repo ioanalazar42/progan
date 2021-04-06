@@ -5,6 +5,7 @@ New, untrained layers are added gradually to an already trained network so the t
 '''
 
 import numpy as np
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -48,7 +49,7 @@ class EqualizedLinear(nn.Linear):
 
         # Define scale for the weights.
         num_weights = self.in_features
-        self.scale = np.sqrt(2 / num_weights)
+        self.scale = math.sqrt(2 / num_weights)
 
     def forward(self, x):
         return nn.functional.linear(x, self.weight * self.scale)
@@ -61,7 +62,7 @@ class EqualizedConv2d(nn.Conv2d):
 
         # Define scale for the weights.
         num_weights = np.prod(self.kernel_size) * self.in_channels
-        self.scale = np.sqrt(2) / np.sqrt(num_weights)
+        self.scale = math.sqrt(2 / num_weights)
     
     def forward(self, x):
         return torch.conv2d(
