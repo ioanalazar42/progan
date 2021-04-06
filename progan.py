@@ -11,7 +11,7 @@ import torchvision
 
 from config import get_configuration
 from datareader import load_images
-from network import Critic4x4, Generator4x4
+#from network import Critic4x4, Generator4x4
 from timeit import default_timer as timer
 from torch.utils import tensorboard
 from utils import configure_logger, sample_gradient_l2_norm
@@ -31,6 +31,17 @@ SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}-{
 TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}-{args.configuration}')
 SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}-{args.configuration}')
 SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'logs')
+
+# Import the network architectures from the file specified in the configuration.
+network_type = CONFIG.get('network_type')
+if network_type == 'network':  # Pixelnorm - No ; Equalized learning rate - No.
+    from network import Critic4x4, Generator4x4
+elif network_type == 'network2':  # Pixelnorm - Yes ; Equalized learning rate - No.
+    from network2 import Critic4x4, Generator4x4
+elif network_type == 'network3':  # Pixelnorm - No ; Equalized learning rate - Yes.
+    from network3 import Critic4x4, Generator4x4
+else network_type == 'network4':  # Pixelnorm - Yes ; Equalized learning rate - Yes.
+    from network4 import Critic4x4, Generator4x4
 
 # Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
 logger = logging.getLogger()
