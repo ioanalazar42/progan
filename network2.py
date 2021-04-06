@@ -28,7 +28,6 @@ def _append_constant(x, const):
     const = const.tile(x.shape[0], 1) # Replicate constant into shape [N, 1] to allow concatenation.
     return torch.cat((x, const), dim=1)
 
-
 def _clip_range(x, min_clip=-1, max_clip=1):
     '''Brings values of x into range [min_clip, max_clip].'''
 
@@ -41,6 +40,7 @@ def _leaky_relu(x):
 
  def _normalization(x, epsilon=1e-8):
    return x / ((x**2).mean(dim=1, keepdim=True).sqrt() + epsilon)
+
 
 class Critic128x128(nn.Module):
 

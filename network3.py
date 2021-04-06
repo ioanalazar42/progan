@@ -4,6 +4,7 @@ There are multiple architectures corresponding to the different image sizes that
 New, untrained layers are added gradually to an already trained network so the trained parameters are not affected.
 '''
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -28,7 +29,6 @@ def _append_constant(x, const):
     const = const.tile(x.shape[0], 1) # Replicate constant into shape [N, 1] to allow concatenation.
     return torch.cat((x, const), dim=1)
 
-
 def _clip_range(x, min_clip=-1, max_clip=1):
     '''Brings values of x into range [min_clip, max_clip].'''
 
@@ -38,6 +38,7 @@ def _leaky_relu(x):
     '''Applies leaky relu activation function with slope 0.2 to input x.'''
 
     return F.leaky_relu(x, negative_slope=0.2)
+
 
 class EqualizedLinear(nn.Linear):
     def __init__(self, in_features, out_features):
@@ -56,7 +57,7 @@ class EqualizedConv2d(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, bias=False)
 
-        nn.init.norma_(self.weight)
+        nn.init.normal_(self.weight)
 
         # Define scale for the weights.
         num_weights = np.prod(self.kernel_size) * self.in_channels
