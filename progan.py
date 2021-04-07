@@ -11,7 +11,6 @@ import torchvision
 
 from config import get_configuration
 from datareader import load_images
-#from network import Critic4x4, Generator4x4
 from timeit import default_timer as timer
 from torch.utils import tensorboard
 from utils import configure_logger, sample_gradient_l2_norm
@@ -27,20 +26,19 @@ EXPERIMENT_ID = int(time.time()) # Used to create new directories to save result
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 CONFIG = get_configuration(args.configuration) # Get the current configuration.
-SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}-{args.configuration}')
+NETWORK_TYPE = CONFIG.get('network_type')
+SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}')
 TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}-{args.configuration}')
 SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}-{args.configuration}')
 SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'logs')
 
-# Import the network architectures from the file specified in the configuration.
-network_type = CONFIG.get('network_type')
-if network_type == 'network':  # Pixelnorm - No ; Equalized learning rate - No.
+if NETWORK_TYPE == 'network':  # Pixelnorm - No ; Equalized learning rate - No.
     from network import Critic4x4, Generator4x4
-elif network_type == 'network2':  # Pixelnorm - Yes ; Equalized learning rate - No.
+elif NETWORK_TYPE == 'network2':  # Pixelnorm - Yes ; Equalized learning rate - No.
     from network2 import Critic4x4, Generator4x4
-elif network_type == 'network3':  # Pixelnorm - No ; Equalized learning rate - Yes.
+elif NETWORK_TYPE == 'network3':  # Pixelnorm - No ; Equalized learning rate - Yes.
     from network3 import Critic4x4, Generator4x4
-else network_type == 'network4':  # Pixelnorm - Yes ; Equalized learning rate - Yes.
+elif NETWORK_TYPE == 'network4':  # Pixelnorm - Yes ; Equalized learning rate - Yes.
     from network4 import Critic4x4, Generator4x4
 
 # Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
@@ -169,7 +167,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                         with torch.no_grad():
                             real_images = torch.tensor(images[random_indexes], device=DEVICE)
                         real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
-                        torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{global_epoch_count:03d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
+                        torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
                     
                     # Save generated images.
                     with torch.no_grad():
@@ -177,7 +175,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
 
                     generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
                     grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
-                    torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{global_epoch_count:03d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
+                    torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
                     
                     # Add generated images to Tensorboard.
                     WRITER.add_image('training/generated-images', grid_images, global_epoch_count)
@@ -211,7 +209,6 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         # Save tensorboard data.
         if CONFIG.is_disabled('dry_run'):
 
-            WRITER.add_image('training/generated-images', grid_images, global_epoch_count)
             WRITER.add_scalar('training/generator/loss', average_generator_loss, global_epoch_count)
             WRITER.add_scalar('training/critic/loss', average_critic_loss, global_epoch_count)
             WRITER.add_scalar('training/critic/real-performance', average_critic_real_performance, global_epoch_count)

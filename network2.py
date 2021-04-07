@@ -38,9 +38,9 @@ def _leaky_relu(x):
 
     return F.leaky_relu(x, negative_slope=0.2)
 
- def _normalization(x, epsilon=1e-8):
-   return x / ((x**2).mean(dim=1, keepdim=True).sqrt() + epsilon)
-
+def _normalization(x, epsilon=1e-8):
+    #return x / ((x**2).mean(dim=1, keepdim=True).sqrt() + epsilon)
+    return x
 
 class Critic128x128(nn.Module):
 
