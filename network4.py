@@ -419,7 +419,6 @@ class Generator4x4(nn.Module):
         self.fc = EqualizedLinear(512, 1024 * 2 * 2)
 
         # Input is 1024x4x4, output is 512x4x4.
-        
         self.conv1 = EqualizedConv2d(1024, 512, kernel_size=(3, 3), padding=1)
 
         # Input is 512x4x4, output is 3x4x4.

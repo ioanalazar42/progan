@@ -5,7 +5,7 @@ Configurations can be specified as a command line argument.
 '''
 
 _REQUIRED_FIELDS = [
-    'network_type'
+    'network_type',
     'data_dir_per_network_size',
     'model_save_frequency',
     'image_save_frequency',
@@ -20,7 +20,7 @@ _REQUIRED_FIELDS = [
 
 _CONFIGURATIONS = {
     'default': {
-        'network_type': 'network'
+        'network_type': 'network',
         'data_dir_per_network_size': {
             4: '/home/datasets/celeba-aligned/4x4',
             8: '/home/datasets/celeba-aligned/8x8',
@@ -62,6 +62,7 @@ _CONFIGURATIONS = {
         }
     },
     '4x4_generation': {
+        'network_type': 'network3',
         'data_dir_per_network_size': {
             4: '/home/datasets/celeba-aligned/4x4',
             8: '/home/datasets/celeba-aligned/8x8',
@@ -73,10 +74,10 @@ _CONFIGURATIONS = {
         'dry_run': False,
         'save_real_images': True,
         'model_save_frequency': 4,
-        'image_save_frequency': 500,
+        'image_save_frequency': 200,
         'training_set_size': 10000,
         'gradient_penalty_factor': 10,
-        'learning_rate': 1e-4,
+        'learning_rate': 1e-3,
         'mini_batch_size': 256,
         'num_critic_training_steps': 2,
         'num_epochs_per_network': {
@@ -104,7 +105,7 @@ _CONFIGURATIONS = {
         }
     },
     'test_saving_data': {
-        'network_type': 'network'
+        'network_type': 'network',
         'data_dir_per_network_size': {
             4: '/home/datasets/celeba-aligned/4x4',
             8: '/home/datasets/celeba-aligned/8x8',
@@ -146,7 +147,7 @@ _CONFIGURATIONS = {
         }
     },
     'test_dry_run': {
-        'network_type': 'network'
+        'network_type': 'network',
         'data_dir_per_network_size': {
             4: '/home/datasets/celeba-aligned/4x4',
             8: '/home/datasets/celeba-aligned/8x8',
