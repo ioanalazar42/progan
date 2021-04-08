@@ -892,6 +892,8 @@ class Generator64x64(nn.Module):
     def evolve(self, device):
         generator128x128_model = Generator128x128().to(device)
 
+        generator128x128_model.fc = self.fc
+
         # conv1
         generator128x128_model.conv1_1_bn = self.conv1_1_bn
         generator128x128_model.conv1_1 = self.conv1_1
@@ -1013,7 +1015,7 @@ class Generator128x128(nn.Module):
         # conv6
         x = _upsample(x)
         x = _leaky_relu(self.conv6_1(self.conv6_1_bn(x)))
-        x = _leaky_relu(self.conv6_2(self.conv6_2_bn(x)))
+        x = _clip_range(self.conv6_2(self.conv6_2_bn(x)))
         
         if self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))

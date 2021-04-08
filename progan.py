@@ -40,6 +40,8 @@ elif NETWORK_TYPE == 'network3':  # Pixelnorm - No ; Equalized learning rate - Y
     from network3 import Critic4x4, Generator4x4
 elif NETWORK_TYPE == 'network4':  # Pixelnorm - Yes ; Equalized learning rate - Yes.
     from network4 import Critic4x4, Generator4x4
+elif NETWORK_TYPE == 'network5':  # Networks twice as big; Pixelnorm - No ; Equalized learning rate - No.
+    from network5 import Critic4x4, Generator4x4
 
 # Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
 logger = logging.getLogger()
