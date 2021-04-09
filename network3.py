@@ -14,7 +14,7 @@ import torch.nn.functional as F
 def _upsample(x):
     '''Changes a [N, Depth, Height, Width] tensor to [N, Depth, 2 * Height, 2 * Width].'''
 
-    return F.interpolate(x, scale_factor=2, mode='nearest', align_corners=True, recompute_scale_factor=False)
+    return F.interpolate(x, scale_factor=2, mode='nearest', recompute_scale_factor=False)
 
 def _downsample(x):
     '''Changes a [N, Depth, Height, Width] tensor to [N, Depth, 0.5 * Height, 0.5 * Width].'''
