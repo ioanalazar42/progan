@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import os
 import pprint
+import shutil
 import time
 import torch
 import torch.nn.functional as F
@@ -28,8 +29,8 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 CONFIG = get_configuration(args.configuration) # Get the current configuration.
 NETWORK_TYPE = CONFIG.get('network_type')
 SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}')
-TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}-{args.configuration}')
-SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}-{args.configuration}')
+TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}')
+SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}')
 SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'logs')
 
 if NETWORK_TYPE == 'network':  # Pixelnorm - No ; Equalized learning rate - No.
@@ -199,7 +200,10 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         if (CONFIG.is_disabled('dry_run') 
             and global_epoch_count > 0 
             and (global_epoch_count % CONFIG.get('model_save_frequency') == 0 or epoch == CONFIG.get('num_epochs_per_network')[network_size] - 1)):
-            
+           
+            # Make a copy of tensorboard data each time model is saved.
+            shutil.copytree(TENSORBOARD_DIR, f'tensorboard-backups/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}/{global_epoch_count:03d}')
+
             save_critic_model_path = f'{SAVE_MODEL_DIR}/critic-{network_size}x{network_size}-{epoch}.pth'
             logger.info(f'\nSaving critic model as "{save_critic_model_path}"...')
             torch.save(critic_model.state_dict(), save_critic_model_path)
