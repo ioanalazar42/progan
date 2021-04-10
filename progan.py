@@ -28,10 +28,12 @@ EXPERIMENT_ID = int(time.time()) # Used to create new directories to save result
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 CONFIG = get_configuration(args.configuration) # Get the current configuration.
 NETWORK_TYPE = CONFIG.get('network_type')
-SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'images/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}')
-TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'tensorboard/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}')
-SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'models/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}')
-SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'logs')
+EXPERIMENT_DIR = CONFIG.get('save_experiment_dir', default=f'experiments/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}')
+SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'{EXPERIMENT_DIR}/images')
+TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'{EXPERIMENT_DIR}/tensorboard')
+LIVE_TENSORBOARD_DIR = f'{TENSORBOARD_DIR}/live'
+SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'{EXPERIMENT_DIR}/models')
+SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'{EXPERIMENT_DIR}')
 
 if NETWORK_TYPE == 'network':  # Pixelnorm - No ; Equalized learning rate - No.
     from network import Critic4x4, Generator4x4
@@ -44,9 +46,13 @@ elif NETWORK_TYPE == 'network4':  # Pixelnorm - Yes ; Equalized learning rate - 
 elif NETWORK_TYPE == 'network5':  # Networks twice as big; Pixelnorm - No ; Equalized learning rate - No.
     from network5 import Critic4x4, Generator4x4
 
-# Set up logging of information. Will print both to console and a file that has this format: 'logs/<EXPERIMENT_ID>.log'
+# Set up the directory where all the experiment data will be saved.
+if CONFIG.is_disabled('dry_run'):
+    os.makedirs(EXPERIMENT_DIR)
+
+# Set up logging of information. Will print both to console and a file that has this format: '<EXPERIMENT_ID>.log'
 logger = logging.getLogger()
-configure_logger(SAVE_LOGS_DIR, EXPERIMENT_ID, args.configuration)
+configure_logger(SAVE_LOGS_DIR)
 
 if CONFIG.is_enabled('dry_run'):
     logger.info('Dry run! Just for testing, data is not saved')
@@ -59,7 +65,7 @@ if CONFIG.is_disabled('dry_run'):
     os.makedirs(SAVE_IMAGE_DIR)
     os.makedirs(TENSORBOARD_DIR)
     os.makedirs(SAVE_MODEL_DIR)
-    WRITER = tensorboard.SummaryWriter(TENSORBOARD_DIR) # Set up TensorBoard.
+    WRITER = tensorboard.SummaryWriter(LIVE_TENSORBOARD_DIR) # Set up TensorBoard.
 
 # Print what configuration is being used and let user know whether or not data is saved for this experiment.
 logger.info(f'Using configuration "{args.configuration}".')
@@ -202,7 +208,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             and (global_epoch_count % CONFIG.get('model_save_frequency') == 0 or epoch == CONFIG.get('num_epochs_per_network')[network_size] - 1)):
            
             # Make a copy of tensorboard data each time model is saved.
-            shutil.copytree(TENSORBOARD_DIR, f'tensorboard-backups/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}/{global_epoch_count:03d}')
+            shutil.copytree(LIVE_TENSORBOARD_DIR, f'{TENSORBOARD_DIR}/{global_epoch_count:03d}')
 
             save_critic_model_path = f'{SAVE_MODEL_DIR}/critic-{network_size}x{network_size}-{epoch}.pth'
             logger.info(f'\nSaving critic model as "{save_critic_model_path}"...')
