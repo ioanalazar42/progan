@@ -130,7 +130,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 critic_model.zero_grad()
 
                 # Evaluate a mini-batch of real images.
-                real_images = get_random_images(images, CONFIG.get('mini_batch_size'), DEVICE)
+                real_images = torch.tensor(get_random_images(images, CONFIG.get('mini_batch_size')), device=DEVICE)
 
                 real_scores = critic_model(real_images)
 
@@ -172,7 +172,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                     # Save real images.
                     if CONFIG.is_enabled('save_real_images'):
                         with torch.no_grad():
-                            real_images = get_random_images(images, 64, DEVICE)
+                            real_images = torch.tensor(get_random_images(images, 64), device=DEVICE)
                         real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
                         torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
                     

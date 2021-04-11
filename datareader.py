@@ -4,7 +4,6 @@ import logging
 import numpy as np
 import os
 import random
-import torch
 
 from skimage import io, transform
 
@@ -45,7 +44,7 @@ def load_images(dir_path, training_set_size, image_size):
 
     return images
 
-def get_random_images(images, count, device):
+def get_random_images(images, count):
     random_indexes = np.random.choice(len(images), count)
     random_images = images[random_indexes]
     
@@ -56,4 +55,4 @@ def get_random_images(images, count, device):
             flipped_image = np.fliplr(image.transpose(1, 2, 0))
             random_images[count] = flipped_image.transpose(2, 0, 1)
     
-    return torch.tensor(random_images, device=device)
+    return random_images
