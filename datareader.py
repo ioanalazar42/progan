@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 import os
+import random
 import torch
 
 from skimage import io, transform
@@ -46,6 +47,13 @@ def load_images(dir_path, training_set_size, image_size):
 
 def get_random_images(images, count, device):
     random_indexes = np.random.choice(len(images), count)
-    random_images = torch.tensor(images[random_indexes], device=device)
-
-    return random_images
+    random_images = images[random_indexes]
+    
+    # Flip the image batch 50% of the time.
+    if random.random() < 0.5:
+        
+        for count, image in enumerate(random_images):
+            flipped_image = np.fliplr(image.transpose(1, 2, 0))
+            random_images[count] = flipped_image.transpose(2, 0, 1)
+    
+    return torch.tensor(random_images, device=device)
