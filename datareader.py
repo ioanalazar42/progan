@@ -44,12 +44,12 @@ def load_images(dir_path, training_set_size, image_size):
 
     return images
 
-def sample_images(images, count, network_size):
+def sample_images(images, count):
     random_indexes = np.random.choice(len(images), count)
     random_images = images[random_indexes]
    
     # Flip the image batch 50% of the time.
     if random.random() < 0.5:
-        return (np.flip(random_images, axis=3)).copy()
+        return np.flip(random_images, axis=3).copy()
     
-    return random_images 
+    return random_images

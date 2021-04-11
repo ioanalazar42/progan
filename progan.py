@@ -72,10 +72,6 @@ if CONFIG.is_disabled('dry_run'):
 logger.info(f'Using configuration "{args.configuration}".')
 logger.info(pprint.pformat(CONFIG.to_dictionary(), indent=4))
 
-# Prepare mini-batch on a separate thread for taining.
-pool = Pool(1)    # Create pool with up to 1 thread.
-sampled_images = pool.apply_async(sample_images, (images, CONFIG.get('mini_batch_size')))
-
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 # Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
 random_state = np.random.Generator(np.random.PCG64(np.random.SeedSequence(44442222)))
@@ -91,6 +87,11 @@ for network_size in [4, 8, 16, 32, 64, 128]:
 
     # Load and preprocess images:
     images = load_images(CONFIG.get('data_dir_per_network_size')[network_size], CONFIG.get('training_set_size'), image_size=network_size)
+
+    # Prepare mini-batch on a separate thread for training.
+    pool = Pool(1)    # Create pool with up to 1 thread.
+    sampled_images = pool.apply_async(sample_images, (images, CONFIG.get('mini_batch_size')))
+
 
     print()
     if network_size == 4:
@@ -109,7 +110,6 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     logged_transition_finished = False
     
     for epoch in range(CONFIG.get('num_epochs_per_network')[network_size]):
-
         start_time = timer()
 
         # Variables for recording statistics.
