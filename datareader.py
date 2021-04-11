@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 import os
+import torch
 
 from skimage import io, transform
 
@@ -42,3 +43,9 @@ def load_images(dir_path, training_set_size, image_size):
             logger.info(f'Loaded {i}/{len(images)} images so far')
 
     return images
+
+def get_random_images(images, count, device):
+    random_indexes = np.random.choice(len(images), count)
+    random_images = torch.tensor(images[random_indexes], device=device)
+
+    return random_images

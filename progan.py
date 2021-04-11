@@ -11,7 +11,7 @@ import torch.optim as optim
 import torchvision
 
 from config import get_configuration
-from datareader import load_images
+from datareader import get_random_images, load_images
 from timeit import default_timer as timer
 from torch.utils import tensorboard
 from utils import configure_logger, sample_gradient_l2_norm
@@ -130,8 +130,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 critic_model.zero_grad()
 
                 # Evaluate a mini-batch of real images.
-                random_indexes = np.random.choice(len(images), CONFIG.get('mini_batch_size'))
-                real_images = torch.tensor(images[random_indexes], device=DEVICE)
+                real_images = get_random_images(images, CONFIG.get('mini_batch_size'), DEVICE)
 
                 real_scores = critic_model(real_images)
 
@@ -172,16 +171,14 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                     
                     # Save real images.
                     if CONFIG.is_enabled('save_real_images'):
-                        random_indexes = np.random.choice(len(images), 64)
                         with torch.no_grad():
-                            real_images = torch.tensor(images[random_indexes], device=DEVICE)
+                            real_images = get_random_images(images, 64, DEVICE)
                         real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
                         torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
                     
                     # Save generated images.
                     with torch.no_grad():
                         generated_images = generator_model(fixed_latent_space_vectors).detach()
-
                     generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
                     grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
                     torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
