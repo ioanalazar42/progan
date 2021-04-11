@@ -11,7 +11,8 @@ import torch.optim as optim
 import torchvision
 
 from config import get_configuration
-from datareader import get_random_images, load_images
+from datareader import sample_images, load_images
+from multiprocessing.dummy import Pool
 from timeit import default_timer as timer
 from torch.utils import tensorboard
 from utils import configure_logger, sample_gradient_l2_norm
@@ -71,6 +72,10 @@ if CONFIG.is_disabled('dry_run'):
 logger.info(f'Using configuration "{args.configuration}".')
 logger.info(pprint.pformat(CONFIG.to_dictionary(), indent=4))
 
+# Prepare mini-batch on a separate thread for taining.
+pool = Pool(1)    # Create pool with up to 1 thread.
+sampled_images = pool.apply_async(sample_images, (images, CONFIG.get('mini_batch_size')))
+
 # Create a random batch of latent space vectors that will be used to visualize the progression of the generator.
 # Use the same values (seeded at 44442222) between multiple runs, so that the progression can still be seen when loading saved models.
 random_state = np.random.Generator(np.random.PCG64(np.random.SeedSequence(44442222)))
@@ -104,6 +109,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     logged_transition_finished = False
     
     for epoch in range(CONFIG.get('num_epochs_per_network')[network_size]):
+
         start_time = timer()
 
         # Variables for recording statistics.
@@ -130,7 +136,8 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 critic_model.zero_grad()
 
                 # Evaluate a mini-batch of real images.
-                real_images = torch.tensor(get_random_images(images, CONFIG.get('mini_batch_size')), device=DEVICE)
+                real_images = torch.tensor(sampled_images.get(), device=DEVICE)    # Get (and possibly wait for) the result of the thread.
+                sampled_images = pool.apply_async(sample_images, (images, CONFIG.get('mini_batch_size')))    # Re-start the thread.
 
                 real_scores = critic_model(real_images)
 
@@ -172,7 +179,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                     # Save real images.
                     if CONFIG.is_enabled('save_real_images'):
                         with torch.no_grad():
-                            real_images = torch.tensor(get_random_images(images, 64), device=DEVICE)
+                            real_images = torch.tensor(sample_images(images, 64), device=DEVICE)
                         real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
                         torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
                     

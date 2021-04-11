@@ -44,7 +44,7 @@ def load_images(dir_path, training_set_size, image_size):
 
     return images
 
-def get_random_images(images, count, network_size):
+def sample_images(images, count, network_size):
     random_indexes = np.random.choice(len(images), count)
     random_images = images[random_indexes]
    
