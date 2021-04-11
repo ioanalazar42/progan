@@ -62,7 +62,7 @@ _CONFIGURATIONS = {
         }
     },
     '4x4_generation': {
-        'network_type': 'network3',
+        'network_type': 'network4',
         'data_dir_per_network_size': {
             4: '/home/datasets/celeba-aligned/4x4',
             8: '/home/datasets/celeba-aligned/8x8',
@@ -74,7 +74,7 @@ _CONFIGURATIONS = {
         'dry_run': False,
         'save_real_images': True,
         'model_save_frequency': 4,
-        'image_save_frequency': 200,
+        'image_save_frequency':200,
         'training_set_size': 10000,
         'gradient_penalty_factor': 10,
         'learning_rate': 1e-3,
@@ -102,6 +102,48 @@ _CONFIGURATIONS = {
             32: 2500,
             64: 2500,
             128: 2500
+        }
+    },
+    'test_flipping_images': {
+        'network_type': 'network',
+        'data_dir_per_network_size': {
+            4: '/home/datasets/celeba-aligned/4x4',
+            8: '/home/datasets/celeba-aligned/8x8',
+            16: '/home/datasets/celeba-aligned/16x16',
+            32: '/home/datasets/celeba-aligned/32x32',
+            64: '/home/datasets/celeba-aligned/64x64',
+            128: '/home/datasets/celeba-aligned/128x128'
+        },
+        'dry_run': True,
+        'model_save_frequency': 4,
+        'image_save_frequency': 2,
+        'training_set_size': 10,
+        'gradient_penalty_factor': 10,
+        'learning_rate': 1e-4,
+        'mini_batch_size': 2,
+        'num_critic_training_steps': 1,
+        'num_epochs_per_network': {
+            4: 1,
+            8: 1,
+            16: 1,
+            32: 1,
+            64: 1,
+            128: 1
+        },
+        'transition_length_per_network': {
+            8: 2,
+            16: 2,
+            32: 2,
+            64: 2,
+            128: 2
+        },
+        'epoch_length_per_network': {
+            4: 1,
+            8: 1,
+            16: 1,
+            32: 1,
+            64: 1,
+            128: 1
         }
     },
     'test_saving_data': {
