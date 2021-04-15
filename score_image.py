@@ -1,8 +1,16 @@
 import argparse
+import numpy as np
 import torch
 
 from networks.network import Critic128x128
+from skimage import io
 
+
+def load_image(path):
+    image = io.imread(path)
+    image = 2 * (image/255) - 1 # Mean normalize image.
+    image = np.expand_dims(image.transpose(2, 0, 1), axis=0) # [img_size, img_size, 3] -> [3, img_size, img_size] -> [1, 3, img_size, img_size]
+    return image.astype(np.float32)
 
 # Directory that contains single 128x128 images generated using pretrained models. 
 IMAGE_DIR_PATH = '/home/ioanalazar459/progan/generated_with_preloaded_models/generator-128x128-12H.pth/1x1'
@@ -12,7 +20,7 @@ PARSER.add_argument('--model_file_name',
                     default='final-128x128-critic.pth',
                     help='The file name of a trained model.')
 PARSER.add_argument('--image_path',
-                    default='{IMAGE_DIR_PATH}/001.jpg',
+                    default=f'{IMAGE_DIR_PATH}/001.jpg',
                     help='The path to an image.')
 args = PARSER.parse_args()
 
@@ -31,6 +39,6 @@ critic_model.eval()
 print(f'Loaded model {MODEL_PATH}')
 
 # Load the image and give it a score.
-image = io.imread(args.image_path).transpose(2, 0, 1)
+image = torch.tensor(load_image(args.image_path), device=DEVICE)
 print('Loaded image {args.image_path}.')
-print(f'Critic score: {critic_model(image)}.')
+print(f'Critic score: {critic_model(image).item():.3f}')
