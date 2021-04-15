@@ -85,7 +85,7 @@ class Critic128x128(nn.Module):
         x = _leaky_relu(self.conv1_1(x))
         x = _leaky_relu(self.conv1_2(x))
 
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _downsample(x_residual)
             x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
@@ -159,7 +159,7 @@ class Critic64x64(nn.Module):
         x = _leaky_relu(self.conv2_1(x))
         x = _leaky_relu(self.conv2_2(x))
 
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _downsample(x_residual)
             x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
@@ -250,7 +250,7 @@ class Critic32x32(nn.Module):
         x = _leaky_relu(self.conv3_1(x))
         x = _leaky_relu(self.conv3_2(x))
 
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _downsample(x_residual)
             x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
@@ -331,7 +331,7 @@ class Critic16x16(nn.Module):
         x = _leaky_relu(self.conv4_1(x))
         x = _leaky_relu(self.conv4_2(x))
 
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _downsample(x_residual)
             x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
@@ -402,7 +402,7 @@ class Critic8x8(nn.Module):
         x = _leaky_relu(self.conv5_1(x))
         x = _leaky_relu(self.conv5_2(x))
 
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _downsample(x_residual)
             x_residual = _leaky_relu(self.residual_rgb_conv(x_residual))
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
@@ -560,7 +560,7 @@ class Generator8x8(nn.Module):
 
         x = _clip_range(self.rgb_conv(x))
 
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
@@ -648,7 +648,7 @@ class Generator16x16(nn.Module):
 
         x = _clip_range(self.rgb_conv(x))
 
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
@@ -754,7 +754,7 @@ class Generator32x32(nn.Module):
 
         x = _clip_range(self.rgb_conv(x))
 
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
@@ -878,7 +878,7 @@ class Generator64x64(nn.Module):
        
         x = _clip_range(self.rgb_conv(x))
 
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
@@ -1015,7 +1015,7 @@ class Generator128x128(nn.Module):
         x = _leaky_relu(self.conv6_1(self.conv6_1_bn(x)))
         x = _clip_range(self.conv6_2(self.conv6_2_bn(x)))
         
-        if self.residual_influence > 0:
+        if self.residual_rgb_conv and self.residual_influence > 0:
             x_residual = _clip_range(self.residual_rgb_conv(x_residual))
             x_residual = _upsample(x_residual)
             x = (1 - self.residual_influence) * x + self.residual_influence * x_residual
