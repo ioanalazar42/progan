@@ -33,6 +33,13 @@ MODEL_PATH = f'trained_models/{args.model_file_name}'
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 SAVE_IMAGE_DIR = f'generated_with_preloaded_models/{args.model_file_name}'
 
+if args.num_images > 1:
+    # Save grids to separate directory.
+    SAVE_IMAGE_DIR += '/grids'
+else:
+    # Add single images to a dedicated directory to use for evaluation.
+    SAVE_IMAGE_DIR += '/1x1'
+
 
 if not os.path.exists(SAVE_IMAGE_DIR):
     os.makedirs(SAVE_IMAGE_DIR)
@@ -49,9 +56,7 @@ generator_model.eval()
 print(f'Loaded model {MODEL_PATH}')
 
 # Create a random batch of latent space vectors.
-random_state = np.random.Generator(np.random.PCG64(np.random.SeedSequence(44442222)))
-random_values = random_state.standard_normal([GRID_SIZE, 512], dtype=np.float32)
-fixed_latent_space_vectors = torch.tensor(random_values, device=DEVICE)
+fixed_latent_space_vectors = torch.randn([GRID_SIZE, 512], device=DEVICE)
 
 generated_images = generator_model(fixed_latent_space_vectors).detach()
 generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
