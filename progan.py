@@ -192,13 +192,14 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         # Record statistics.
         time_elapsed = timer() - start_time
 
-        # Log some statistics in the terminal.
-        logger.info(f'{network_size}x{network_size} | {epoch:3} | '
+        # Log some statistics.
+        logger.info(f'{network_size}x{network_size} | {global_epoch_count:3} | {epoch:3} | '
             f'Loss(C): {average_critic_loss:.6f} | '
             f'Loss(G): {average_generator_loss:.6f} | '
             f'Avg C(x): {average_critic_real_performance:.6f} | '
             f'Avg C(G(x)): {average_critic_generated_performance:.6f} | '
             f'C(x) - C(G(x)): {discernability_score:.6f} | '
+            f'{int(network_size/2)}x{int(network_size/2)} residual influence: {generator_model.residual_influence:.3f} | '
             f'Time: {time_elapsed:.3f}s')
 
         if CONFIG.is_disabled('dry_run'):
