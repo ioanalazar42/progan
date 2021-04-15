@@ -9,15 +9,30 @@ import torchvision
 from networks.network import Generator128x128
 
 
+def _get_grid_size(num_images, max_len=20):
+    '''Returns the number of images that will be put in a grid of size 8 x num_images.
+       Grid size can be at most 8 x max_len.'''
+    if num_images == 0 or num_images == 1:
+        return 1
+    elif num_images > max_len:
+        return max_len *  max_len
+    else:
+        return num_images * num_images
+
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('--model_file_name',
                     default='final-128x128-generator.pth',
                     help='The file name of a trained model.')
+PARSER.add_argument('--num_images',
+                    default='8', type=int,
+                    help='e.g. 15 -> grid of 15*15 images..')
 args = PARSER.parse_args()
 
+GRID_SIZE = _get_grid_size(args.num_images)
 MODEL_PATH = f'trained_models/{args.model_file_name}'
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 SAVE_IMAGE_DIR = f'generated_with_preloaded_models/{args.model_file_name}'
+
 
 if not os.path.exists(SAVE_IMAGE_DIR):
     os.makedirs(SAVE_IMAGE_DIR)
@@ -35,7 +50,7 @@ print(f'Loaded model {MODEL_PATH}')
 
 # Create a random batch of latent space vectors.
 random_state = np.random.Generator(np.random.PCG64(np.random.SeedSequence(44442222)))
-random_values = random_state.standard_normal([64, 512], dtype=np.float32)
+random_values = random_state.standard_normal([GRID_SIZE, 512], dtype=np.float32)
 fixed_latent_space_vectors = torch.tensor(random_values, device=DEVICE)
 
 generated_images = generator_model(fixed_latent_space_vectors).detach()
