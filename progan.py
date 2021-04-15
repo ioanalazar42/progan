@@ -147,7 +147,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 gradient_l2_norm = sample_gradient_l2_norm(critic_model, real_images, generated_images, DEVICE)
                 
                 # Update the weights.
-                loss = torch.mean(generated_scores) - torch.mean(real_scores) + CONFIG.get('gradient_penalty_factor') * gradient_l2_norm  # The critic's goal is for `generated_scores` to be small and `real_scores` to be big.
+                loss = torch.mean(generated_scores) - torch.mean(real_scores) + CONFIG.get('gradient_penalty_factor') * gradient_l2_norm  # The critic's goal is for 'generated_scores' to be small and 'real_scores' to be big.
                 loss.backward()
                 critic_optimizer.step()
 
@@ -162,7 +162,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             generated_scores = critic_model(generated_images)
 
             # Update the weights.
-            loss = -torch.mean(generated_scores)  # The generator's goal is for `generated_scores` to be big.
+            loss = -torch.mean(generated_scores)  # The generator's goal is for 'generated_scores' to be big.
             loss.backward()
             generator_optimizer.step()
 
