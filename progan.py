@@ -37,15 +37,15 @@ SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'{EXPERIMENT_DIR}/models'
 SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'{EXPERIMENT_DIR}')
 
 if NETWORK_TYPE == 'network':  # Pixelnorm - No ; Equalized learning rate - No.
-    from network import Critic4x4, Generator4x4
+    from networks.network import Critic4x4, Generator4x4
 elif NETWORK_TYPE == 'network2':  # Pixelnorm - Yes ; Equalized learning rate - No.
-    from network2 import Critic4x4, Generator4x4
+    from networks.network2 import Critic4x4, Generator4x4
 elif NETWORK_TYPE == 'network3':  # Pixelnorm - No ; Equalized learning rate - Yes.
-    from network3 import Critic4x4, Generator4x4
+    from networks.network3 import Critic4x4, Generator4x4
 elif NETWORK_TYPE == 'network4':  # Pixelnorm - Yes ; Equalized learning rate - Yes.
-    from network4 import Critic4x4, Generator4x4
+    from networks.network4 import Critic4x4, Generator4x4
 elif NETWORK_TYPE == 'network5':  # Networks twice as deep; Pixelnorm - No ; Equalized learning rate - No.
-    from network5 import Critic4x4, Generator4x4
+    from networks.network5 import Critic4x4, Generator4x4
 
 # Set up logging of information. Will print both to console and a file that has this format: '<EXPERIMENT_ID>.log'
 logger = logging.getLogger()
