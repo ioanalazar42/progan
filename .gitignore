@@ -1,7 +1,2 @@
 experiments/
-images/
-tensorboard/
-tensorboard-backups/
-models/
-logs/
 __pycache__/
