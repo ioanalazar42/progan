@@ -118,13 +118,18 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         # Train: For every epoch, perform the number of mini-batch updates that corresonds to the current network size.
         for _ in range(CONFIG.get('epoch_length_per_network')[network_size]):
             total_training_steps += 1
-
+            
             if network_size > 4:
+
                 if critic_model.residual_influence > 0:
                     critic_model.residual_influence -= 1 / CONFIG.get('transition_length_per_network')[network_size]
                     generator_model.residual_influence -= 1 / CONFIG.get('transition_length_per_network')[network_size]
-            
+                    
                 elif not logged_transition_finished: # Residual influence zero, so finished transitioning.
+                    # Manually set residual influence to zero to avoid problems caused by really small floats.  
+                    critic_model.residual_influence = 0
+                    generator_model.residual_influence = 0
+                    
                     logger.info(f'FINISHED TRANSITIONING TO {network_size}x{network_size}.')
                     logged_transition_finished = True
 
@@ -191,15 +196,16 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         time_elapsed = timer() - start_time
 
         # Log some statistics.
-        stats = f'{network_size}x{network_size} | {global_epoch_count:3} | {epoch:3} | '
+        stats = (f'{network_size}x{network_size} | {global_epoch_count:3} | {epoch:3} | '
             f'Loss(C): {average_critic_loss:.6f} | '
             f'Loss(G): {average_generator_loss:.6f} | '
             f'Avg C(x): {average_critic_real_performance:.6f} | '
             f'Avg C(G(x)): {average_critic_generated_performance:.6f} | '
             f'C(x) - C(G(x)): {discernability_score:.6f} | '
-            f'Time: {time_elapsed:.3f}s'
+            f'Time: {time_elapsed:.3f}s')
         # If network_size > 4, log residual influence for current network.
-        stats += f' | {int(network_size/2)}x{int(network_size/2)} residual influence: {generator_model.residual_influence:.3f}'
+        if network_size > 4:
+            stats += f' | {int(network_size/2)}x{int(network_size/2)} residual influence: {generator_model.residual_influence:.3f}'
         logger.info(stats)
 
         # Save models and tensorboard data.
