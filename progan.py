@@ -27,12 +27,12 @@ args = PARSER.parse_args()
 EXPERIMENT_ID = int(time.time()) # Used to create new directories to save results of individual experiments.
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-CONFIG = get_configuration(args.configuration) # Get the current configuration.
+CONFIG = get_configuration(args.configuration) # Get the experiment configuration.
 NETWORK_TYPE = CONFIG.get('network_type')
 EXPERIMENT_DIR = CONFIG.get('save_experiment_dir', default=f'experiments/{EXPERIMENT_ID}-{args.configuration}-{NETWORK_TYPE}')
 SAVE_IMAGE_DIR = CONFIG.get('save_image_dir', default=f'{EXPERIMENT_DIR}/images')
 TENSORBOARD_DIR = CONFIG.get('tensorboard_dir', default=f'{EXPERIMENT_DIR}/tensorboard')
-LIVE_TENSORBOARD_DIR = f'{TENSORBOARD_DIR}/live'
+LIVE_TENSORBOARD_DIR = f'{TENSORBOARD_DIR}/live' # Stores the latest version of tensorboard data.
 SAVE_MODEL_DIR = CONFIG.get('save_model_dir', default=f'{EXPERIMENT_DIR}/models')
 SAVE_LOGS_DIR = CONFIG.get('save_logs_dir', default=f'{EXPERIMENT_DIR}')
 
@@ -44,12 +44,8 @@ elif NETWORK_TYPE == 'network3':  # Pixelnorm - No ; Equalized learning rate - Y
     from network3 import Critic4x4, Generator4x4
 elif NETWORK_TYPE == 'network4':  # Pixelnorm - Yes ; Equalized learning rate - Yes.
     from network4 import Critic4x4, Generator4x4
-elif NETWORK_TYPE == 'network5':  # Networks twice as big; Pixelnorm - No ; Equalized learning rate - No.
+elif NETWORK_TYPE == 'network5':  # Networks twice as deep; Pixelnorm - No ; Equalized learning rate - No.
     from network5 import Critic4x4, Generator4x4
-
-# Set up the directory where all the experiment data will be saved.
-if CONFIG.is_disabled('dry_run'):
-    os.makedirs(EXPERIMENT_DIR)
 
 # Set up logging of information. Will print both to console and a file that has this format: '<EXPERIMENT_ID>.log'
 logger = logging.getLogger()
@@ -61,14 +57,16 @@ if CONFIG.is_enabled('dry_run'):
 if CONFIG.missing_fields():
     raise Exception(f'Configuration {args.configuration} misses the following fields: {CONFIG.missing_fields()}\n')
 
-# Create directories for images, tensorboard results, saved models and experiment logs.
+# Inside the root experiment directory, create separate directories for images, tensorboard results, saved models and experiment logs.
 if CONFIG.is_disabled('dry_run'):
+    if not os.path.exists(EXPERIMENT_DIR):
+        os.makedirs(EXPERIMENT_DIR) # Set up root experiment directory.
     os.makedirs(SAVE_IMAGE_DIR)
     os.makedirs(TENSORBOARD_DIR)
     os.makedirs(SAVE_MODEL_DIR)
     WRITER = tensorboard.SummaryWriter(LIVE_TENSORBOARD_DIR) # Set up TensorBoard.
 
-# Print what configuration is being used and let user know whether or not data is saved for this experiment.
+# Log experiment configuration (specifies parameters like: number of epochs, learning rate, minibatch size, etc.)
 logger.info(f'Using configuration "{args.configuration}".')
 logger.info(pprint.pformat(CONFIG.to_dictionary(), indent=4))
 
@@ -85,13 +83,12 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     # Deallocate previous images.
     images = None
 
-    # Load and preprocess images:
+    # Load and preprocess images.
     images = load_images(CONFIG.get('data_dir_per_network_size')[network_size], CONFIG.get('training_set_size'), image_size=network_size)
 
     # Prepare mini-batch on a separate thread for training.
     pool = Pool(1)    # Create pool with up to 1 thread.
     sampled_images = pool.apply_async(sample_images, (images, CONFIG.get('mini_batch_size')))
-
 
     print()
     if network_size == 4:
@@ -106,7 +103,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
     critic_optimizer = optim.Adam(critic_model.parameters(), lr=CONFIG.get('learning_rate'), betas=(0, 0.99))
     generator_optimizer = optim.Adam(generator_model.parameters(), lr=CONFIG.get('learning_rate'), betas=(0, 0.99))
     
-    # When the transition to a larger network is finished, log this.
+    # Whenever the transition to a larger network is finished, log an acknowledgement.
     logged_transition_finished = False
     
     for epoch in range(CONFIG.get('num_epochs_per_network')[network_size]):
@@ -145,7 +142,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 random_latent_space_vectors = torch.randn(CONFIG.get('mini_batch_size'), 512, device=DEVICE)
                 generated_images = generator_model(random_latent_space_vectors)
 
-                generated_scores = critic_model(generated_images.detach()) # TODO: Why exactly is `.detach` required?
+                generated_scores = critic_model(generated_images.detach())
 
                 gradient_l2_norm = sample_gradient_l2_norm(critic_model, real_images, generated_images, DEVICE)
                 
@@ -186,10 +183,11 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 with torch.no_grad():
                     generated_images = generator_model(fixed_latent_space_vectors).detach()
                 generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
-                grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
                 torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
-     
-        # Record statistics.
+                # Create a grid of generated images to save to Tensorboard.
+                grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
+
+        # Record time elapsed for current epoch.
         time_elapsed = timer() - start_time
 
         # Log some statistics.
@@ -216,7 +214,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             if ((global_epoch_count > 0 and global_epoch_count % CONFIG.get('model_save_frequency') == 0)
                 or epoch == CONFIG.get('num_epochs_per_network')[network_size] - 1):
             
-                # Make a copy of tensorboard data each time model is saved.
+                # Create a backup of tensorboard data each time model is saved.
                 shutil.copytree(LIVE_TENSORBOARD_DIR, f'{TENSORBOARD_DIR}/{global_epoch_count:03d}')
 
                 save_critic_model_path = f'{SAVE_MODEL_DIR}/critic-{network_size}x{network_size}-{epoch}.pth'
