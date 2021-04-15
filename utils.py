@@ -14,7 +14,7 @@ def sample_gradient_l2_norm(critic_model, real_images, generated_images, device)
     # Use a mixture of real images and generated images merged together.
     percentages = torch.rand(mini_batch_size, 1, 1, 1, device=device)
     interpolated_images = percentages * real_images + (1 - percentages) * generated_images
-    interpolated_images = interpolated_images.detach().requires_grad_(True)  # PyTorch requires this ¯\_(ツ)_/¯
+    interpolated_images = interpolated_images.detach().requires_grad_(True)
 
     scores = critic_model(interpolated_images)
 

@@ -10,12 +10,12 @@ import os
 
 from skimage import img_as_ubyte, io, transform
 
+
 # Define constants for different modes of image resizing.
 PARSER = argparse.ArgumentParser()
 TRAINING_IMAGES_DIR_PATH = '/home/datasets/celeba-aligned' # Path to all training images.
                                                            # Will contain directories for images of different sizes to use for the ProGAN.
 ORIGINAL_IMAGES_DIR_PATH = f'{TRAINING_IMAGES_DIR_PATH}/original' # The path to the original CelebA images.
-
 
 def _center_crop_image(image):
     height = image.shape[0]
@@ -27,10 +27,8 @@ def _center_crop_image(image):
 
     return image[y : crop_size, x : crop_size]
 
-
 def _resize_image(image, width, height):
     return transform.resize(image, [height, width, 3], anti_aliasing=True, mode='constant')
-
 
 def _load_image(path):
     image = io.imread(path)

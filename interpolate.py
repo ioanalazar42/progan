@@ -7,6 +7,7 @@ import torchvision
 
 from network import Generator128x128
 
+
 INTERPOLATION_ID = int(time.time())
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 GENERATOR_NAME = 'generator-128x128'
@@ -40,5 +41,4 @@ for alpha in np.linspace(0, 1, STEPS):
     if interpolation_num % 200 == 0:
         print(f'Saved intermediary vector {interpolation_num}.')
         
-    interpolation_num += 1
-                    
+    interpolation_num += 1           

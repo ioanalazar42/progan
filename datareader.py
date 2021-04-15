@@ -12,7 +12,6 @@ def _mean_normalize(image):
     '''Takes an image with float values between [0, 255] and normalizes it to [-1, 1]'''
     return 2 * (image/255) - 1
 
-
 def _load_image(path):
     image = io.imread(path)
 
@@ -25,7 +24,6 @@ def _load_image(path):
 
     # Change the image_size x image_size x 3 image to 3 x image_size x image_size as expected by PyTorch.
     return image.transpose(2, 0, 1)
-
 
 def load_images(dir_path, training_set_size, image_size):
     logger = logging.getLogger()

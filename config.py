@@ -235,6 +235,7 @@ _CONFIGURATIONS = {
 def get_configuration(name):
     return Configuration(_CONFIGURATIONS[name])
 
+
 class Configuration():
     
     def __init__(self, configuration):

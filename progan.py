@@ -17,6 +17,7 @@ from timeit import default_timer as timer
 from torch.utils import tensorboard
 from utils import configure_logger, sample_gradient_l2_norm
 
+
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('--configuration',
                     default='default',

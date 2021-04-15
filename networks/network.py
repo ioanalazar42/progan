@@ -341,7 +341,6 @@ class Critic8x8(nn.Module):
 
         return critic16x16_model
 
-
 class Critic4x4(nn.Module):
 
     def __init__(self):
@@ -538,7 +537,6 @@ class Generator16x16(nn.Module):
         generator32x32_model.residual_rgb_conv = self.rgb_conv
 
         return generator32x32_model
-
 
 class Generator32x32(nn.Module):
 

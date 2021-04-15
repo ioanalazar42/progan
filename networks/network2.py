@@ -41,6 +41,7 @@ def _leaky_relu(x):
 def _normalization(x, epsilon=1e-8):
     return x / ((x**2).mean(dim=1, keepdim=True).sqrt() + epsilon)
 
+
 class Critic128x128(nn.Module):
 
     def __init__(self):
@@ -343,7 +344,6 @@ class Critic8x8(nn.Module):
 
         return critic16x16_model
 
-
 class Critic4x4(nn.Module):
 
     def __init__(self):
@@ -522,7 +522,6 @@ class Generator16x16(nn.Module):
         generator32x32_model.residual_rgb_conv = self.rgb_conv
 
         return generator32x32_model
-
 
 class Generator32x32(nn.Module):
 
