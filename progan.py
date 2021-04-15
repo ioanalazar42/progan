@@ -173,25 +173,21 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             average_generator_loss += loss.item() / CONFIG.get('epoch_length_per_network')[network_size]
 
             # Save generated images (and real images if they are required for comparison) every 'image_save_frequency' training steps.
-            if (total_training_steps % CONFIG.get('image_save_frequency') == 0):
-                if CONFIG.is_disabled('dry_run'):
+            if (CONFIG.is_disabled('dry_run') and total_training_steps % CONFIG.get('image_save_frequency') == 0):
                     
-                    # Save real images.
-                    if CONFIG.is_enabled('save_real_images'):
-                        with torch.no_grad():
-                            real_images = torch.tensor(sample_images(images, 64), device=DEVICE)
-                        real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
-                        torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
-                    
-                    # Save generated images.
+                # Save real images.
+                if CONFIG.is_enabled('save_real_images'):
                     with torch.no_grad():
-                        generated_images = generator_model(fixed_latent_space_vectors).detach()
-                    generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
-                    grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
-                    torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
-                    
-                    # Add generated images to Tensorboard.
-                    WRITER.add_image('training/generated-images', grid_images, global_epoch_count)
+                        real_images = torch.tensor(sample_images(images, 64), device=DEVICE)
+                    real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
+                    torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
+                
+                # Save generated images.
+                with torch.no_grad():
+                    generated_images = generator_model(fixed_latent_space_vectors).detach()
+                generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
+                grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
+                torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
      
         # Record statistics.
         global_epoch_count += 1
@@ -206,30 +202,35 @@ for network_size in [4, 8, 16, 32, 64, 128]:
             f'C(x) - C(G(x)): {discernability_score:.6f} | '
             f'Time: {time_elapsed:.3f}s')
 
-        # Save the model parameters at a specified interval.
-        if (CONFIG.is_disabled('dry_run') 
-            and global_epoch_count > 0 
-            and (global_epoch_count % CONFIG.get('model_save_frequency') == 0 or epoch == CONFIG.get('num_epochs_per_network')[network_size] - 1)):
-           
-            # Make a copy of tensorboard data each time model is saved.
-            shutil.copytree(LIVE_TENSORBOARD_DIR, f'{TENSORBOARD_DIR}/{global_epoch_count:03d}')
-
-            save_critic_model_path = f'{SAVE_MODEL_DIR}/critic-{network_size}x{network_size}-{epoch}.pth'
-            logger.info(f'\nSaving critic model as "{save_critic_model_path}"...')
-            torch.save(critic_model.state_dict(), save_critic_model_path)
-            
-            save_generator_model_path = f'{SAVE_MODEL_DIR}/generator-{network_size}x{network_size}-{epoch}.pth'
-            logger.info(f'Saving generator model as "{save_generator_model_path}"...\n')
-            torch.save(generator_model.state_dict(), save_generator_model_path)
-
-        # Save tensorboard data.
         if CONFIG.is_disabled('dry_run'):
-
+            # Save tensorboard data.
             WRITER.add_scalar('training/generator/loss', average_generator_loss, global_epoch_count)
             WRITER.add_scalar('training/critic/loss', average_critic_loss, global_epoch_count)
             WRITER.add_scalar('training/critic/real-performance', average_critic_real_performance, global_epoch_count)
             WRITER.add_scalar('training/critic/generated-performance', average_critic_generated_performance, global_epoch_count)
             WRITER.add_scalar('training/discernability-score', discernability_score, global_epoch_count)
             WRITER.add_scalar('training/epoch-duration', time_elapsed, global_epoch_count)
+
+            # Add a grid of 64 generated images to Tensorboard at the end of every epoch.
+            with torch.no_grad():
+                generated_images = generator_model(fixed_latent_space_vectors).detach()
+            generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
+            grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
+            WRITER.add_image('training/generated-images', grid_images, global_epoch_count)
+    
+            # Save the model parameters at a specified interval.
+            if ((global_epoch_count > 0 and global_epoch_count % CONFIG.get('model_save_frequency') == 0)
+                or epoch == CONFIG.get('num_epochs_per_network')[network_size] - 1):
+            
+                # Make a copy of tensorboard data each time model is saved.
+                shutil.copytree(LIVE_TENSORBOARD_DIR, f'{TENSORBOARD_DIR}/{global_epoch_count:03d}')
+
+                save_critic_model_path = f'{SAVE_MODEL_DIR}/critic-{network_size}x{network_size}-{epoch}.pth'
+                logger.info(f'\nSaving critic model as "{save_critic_model_path}"...')
+                torch.save(critic_model.state_dict(), save_critic_model_path)
+                
+                save_generator_model_path = f'{SAVE_MODEL_DIR}/generator-{network_size}x{network_size}-{epoch}.pth'
+                logger.info(f'Saving generator model as "{save_generator_model_path}"...\n')
+                torch.save(generator_model.state_dict(), save_generator_model_path)
 
 logger.info('Finished training!')
