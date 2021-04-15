@@ -118,13 +118,18 @@ for network_size in [4, 8, 16, 32, 64, 128]:
         # Train: For every epoch, perform the number of mini-batch updates that corresonds to the current network size.
         for _ in range(CONFIG.get('epoch_length_per_network')[network_size]):
             total_training_steps += 1
-
+            
             if network_size > 4:
+
                 if critic_model.residual_influence > 0:
                     critic_model.residual_influence -= 1 / CONFIG.get('transition_length_per_network')[network_size]
                     generator_model.residual_influence -= 1 / CONFIG.get('transition_length_per_network')[network_size]
-            
+                    
                 elif not logged_transition_finished: # Residual influence zero, so finished transitioning.
+                    # Manually set residual influence to zero to avoid problems caused by really small floats.  
+                    critic_model.residual_influence = 0
+                    generator_model.residual_influence = 0
+                    
                     logger.info(f'FINISHED TRANSITIONING TO {network_size}x{network_size}.')
                     logged_transition_finished = True
 
