@@ -9,7 +9,7 @@ from networks.network5 import Generator128x128
 
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('--model_file_name',
-                    default='final-128x128-generator.pth',
+                    default='deep-generator-128x128.pth',
                     help='The file name of a trained model')
 PARSER.add_argument('--grid_size',
                     default='64', type=int,
@@ -42,7 +42,7 @@ generator_model = Generator128x128().to(DEVICE)
 generator_model.residual_rgb_conv = None
 generator_model.residual_influence = None
 
-generator_model.load_state_dict(torch.load(MODEL_PATH))
+generator_model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
 generator_model.eval()
 print(f'Loaded model "{MODEL_PATH}"')
 

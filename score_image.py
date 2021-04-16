@@ -4,7 +4,7 @@ import os
 import random
 import torch
 
-from networks.network import Critic128x128
+from networks.network5 import Critic128x128
 from skimage import io
 
 
@@ -15,11 +15,11 @@ def load_image(path):
     return image.astype(np.float32)
 
 # Directory that contains single 128x128 images generated using pretrained models. 
-IMAGE_DIR_PATH = 'generated_with_preloaded_models/1x1'
+IMAGE_DIR_PATH = 'generated_images/1x1'
 
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('--model_file_name',
-                    default='final-128x128-critic.pth',
+                    default='deep-critic-128x128.pth',
                     help='The file name of a trained model.')
 PARSER.add_argument('--image_path',
                     default=f'random',
@@ -36,7 +36,7 @@ critic_model = Critic128x128().to(DEVICE)
 critic_model.residual_rgb_conv = None
 critic_model.residual_influence = None
 
-critic_model.load_state_dict(torch.load(MODEL_PATH))
+critic_model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
 critic_model.eval()
 print(f'\nLoaded model "{MODEL_PATH}"')
 
