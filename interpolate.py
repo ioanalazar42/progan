@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import os
 import time
@@ -5,22 +6,32 @@ import torch
 import torch.nn.functional as F
 import torchvision
 
-from network import Generator128x128
+from networks.network import Generator128x128
 
+
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument('--model_file_name',
+                    default='generator-128x128-12H.pth',
+                    help='The file name of a trained model')
+args = PARSER.parse_args()
 
 INTERPOLATION_ID = int(time.time())
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-GENERATOR_NAME = 'generator-128x128'
-GENERATOR_MODEL_PATH = f'/home/ioanalazar459/progan/{GENERATOR_NAME}.pth'
-SAVE_INTERPOLATION_DIR = f'interpolate/{INTERPOLATION_ID}-{GENERATOR_NAME}'
+MODEL_PATH = f'trained_models/{args.model_file_name}'
+SAVE_INTERPOLATION_DIR = f'interpolate/{INTERPOLATION_ID}'
 STEPS = 600 # 600 intermediary vectors.
 
 os.makedirs(SAVE_INTERPOLATION_DIR)
 
 generator_model = Generator128x128().to(DEVICE)
-generator_model.load_state_dict(torch.load(GENERATOR_MODEL_PATH))
+
+# Deactivate residual elements in the generator.
+generator_model.residual_rgb_conv = None
+generator_model.residual_influence = None
+
+generator_model.load_state_dict(torch.load(MODEL_PATH))
 generator_model.eval()
-print(f'Loaded model {GENERATOR_NAME}.pth')
+print(f'Loaded model "{MODEL_PATH}"')
 
 # Generate two random 512-length vectors sampled from a normal distribution
 VECTOR_A = torch.randn(1, 512, device=DEVICE)
