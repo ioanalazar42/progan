@@ -44,7 +44,7 @@ generator_model.residual_influence = None
 
 generator_model.load_state_dict(torch.load(MODEL_PATH))
 generator_model.eval()
-print(f'Loaded model {MODEL_PATH}')
+print(f'Loaded model "{MODEL_PATH}"')
 
 # Create a random batch of latent space vectors.
 fixed_latent_space_vectors = torch.randn([GRID_SIZE, args.lsv_size], device=DEVICE)
@@ -52,4 +52,4 @@ fixed_latent_space_vectors = torch.randn([GRID_SIZE, args.lsv_size], device=DEVI
 generated_images = generator_model(fixed_latent_space_vectors).detach()
 generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
 torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{(IMAGE_NUM_SO_FAR+1):03d}.jpg', padding=2, normalize=True)
-print(f'Saved image {SAVE_IMAGE_DIR}/{(IMAGE_NUM_SO_FAR+1):03d}.jpg')
+print(f'Saved image "{SAVE_IMAGE_DIR}/{(IMAGE_NUM_SO_FAR+1):03d}.jpg"')
