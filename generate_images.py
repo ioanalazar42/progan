@@ -8,8 +8,8 @@ from networks.network5 import Generator128x128
 
 
 PARSER = argparse.ArgumentParser()
-PARSER.add_argument('--model_file_name',
-                    default='deep-generator-128x128.pth',
+PARSER.add_argument('--model_path',
+                    default='trained_models/deep-generator-128x128.pth',
                     help='The file name of a trained model')
 PARSER.add_argument('--grid_size',
                     default='64', type=int,
@@ -22,10 +22,9 @@ PARSER.add_argument('--iterations',
                     help='How many samples to generate')
 args = PARSER.parse_args()
 
-GRID_SIZE = min(64, max(1, args.grid_size))
-MODEL_PATH = f'trained_models/{args.model_file_name}'
+GRID_SIZE = min(64, max(1, args.grid_size)) # Constrain grid size to interval [1, 64].
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-SAVE_IMAGE_DIR = f'generated_with_preloaded_models'
+SAVE_IMAGE_DIR = 'generated_with_preloaded_models'
 
 if args.grid_size > 1:
     # Save grids to separate directory.
@@ -44,9 +43,9 @@ generator_model = Generator128x128().to(DEVICE)
 generator_model.residual_rgb_conv = None
 generator_model.residual_influence = None
 
-generator_model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
+generator_model.load_state_dict(torch.load(args.model_path, map_location=DEVICE))
 generator_model.eval()
-print(f'Loaded model "{MODEL_PATH}"')
+print(f'Loaded model "{args.model_path}"')
 
 for i in range(args.iterations):
     image_num_so_far = len(os.listdir(SAVE_IMAGE_DIR))
