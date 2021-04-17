@@ -24,8 +24,8 @@ def _load_image(path):
 IMAGE_DIR_PATH = 'generated_images/1x1'
 
 PARSER = argparse.ArgumentParser()
-PARSER.add_argument('--model_file_name',
-                    default='deep-critic-128x128.pth',
+PARSER.add_argument('--model_path',
+                    default='trained_models/deep-critic-128x128.pth',
                     help='The file name of a trained model.')
 PARSER.add_argument('--image_path',
                     default=f'random',
@@ -35,8 +35,8 @@ PARSER.add_argument('--iterations',
                     help='How many random images to score')
 args = PARSER.parse_args()
 
-MODEL_PATH = f'trained_models/{args.model_file_name}'
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+NUM_IMAGES = max(1, args.iterations)
 
 # Set up pretrained Critic.
 critic_model = Critic128x128().to(DEVICE)
@@ -45,14 +45,14 @@ critic_model = Critic128x128().to(DEVICE)
 critic_model.residual_rgb_conv = None
 critic_model.residual_influence = None
 
-critic_model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
+critic_model.load_state_dict(torch.load(args.model_path, map_location=DEVICE))
 critic_model.eval()
-print(f'Loaded model "{MODEL_PATH}"')
+print(f'Loaded model "{args.model_path}"')
 
 if args.image_path == 'random':
-    print(f'Picking {args.iterations} random images.\n')
+    print(f'Picking {NUM_IMAGES} random images.\n')
     file_names = np.asarray(os.listdir(IMAGE_DIR_PATH))
-    random_indexes = np.random.choice(len(file_names), args.iterations)
+    random_indexes = np.random.choice(len(file_names), NUM_IMAGES)
     file_names = file_names[random_indexes]
 
     for i, file_name in enumerate(file_names):
