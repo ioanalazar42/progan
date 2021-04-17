@@ -37,9 +37,9 @@ Loads image "generated_images/1x1/001.jpg" and scores it using trained critic "t
 $ python score_image.py --model_path=trained_models/deep-critic-128x128.pth --image_path=generated_images/1x1/001.jpg
 ```
 
-Loads 5 random images and scores them using trained critic "trained_models/deep-critic-128x128.pth".
+Loads 5 random images and scores them using trained critic.
 ```bash
-$ python score_image.py --model_path=trained_models/deep-critic-128x128.pth --image_path=random --iterations=5
+$ python score_image.py --iterations=5
 ```
 
 
