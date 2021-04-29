@@ -183,13 +183,13 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                     with torch.no_grad():
                         real_images = torch.tensor(sample_images(images, 64), device=DEVICE)
                     real_images = F.interpolate(real_images, size=(128, 128), mode='nearest')
-                    torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
+                    torchvision.utils.save_image(real_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:07d}-{network_size}x{network_size}-{epoch}-real.jpg', padding=2, normalize=True)
                 
                 # Save generated images.
                 with torch.no_grad():
                     generated_images = generator_model(fixed_latent_space_vectors).detach()
                 generated_images = F.interpolate(generated_images, size=(128, 128), mode='nearest')
-                torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:05d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
+                torchvision.utils.save_image(generated_images, f'{SAVE_IMAGE_DIR}/{total_training_steps:07d}-{network_size}x{network_size}-{epoch}.jpg', padding=2, normalize=True)
                 # Create a grid of generated images to save to Tensorboard.
                 grid_images = torchvision.utils.make_grid(generated_images, padding=2, normalize=True)
 
@@ -228,7 +228,7 @@ for network_size in [4, 8, 16, 32, 64, 128]:
                 shutil.copytree(LIVE_TENSORBOARD_DIR, f'{TENSORBOARD_DIR}/{global_epoch_count:03d}')
 
                 save_critic_model_path = f'{SAVE_MODEL_DIR}/critic-{network_size}x{network_size}-{epoch}.pth'
-                logger.info(f'\nSaving critic model as "{save_critic_model_path}"...')
+                logger.info(f'Saving critic model as "{save_critic_model_path}"...')
                 torch.save(critic_model.state_dict(), save_critic_model_path)
                 
                 save_generator_model_path = f'{SAVE_MODEL_DIR}/generator-{network_size}x{network_size}-{epoch}.pth'
